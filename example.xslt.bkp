@@ -1,0 +1,185 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xsl:stylesheet version="1.0"
+    xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
+    xmlns:che="http://www.geocat.ch/2008/che"
+    xmlns:gmd="http://www.isotc211.org/2005/gmd"
+    xmlns:gco="http://www.isotc211.org/2005/gco">
+    <!-- Templates -->
+    <!-- Imports -->
+    <xsl:variable name="label" select="document('root/schemas/iso19139/labels.xml')"/>
+    <xsl:variable name="codelists" select="document('root/schemas/iso19139/codelists.xml')"/>
+    <!-- Date formatting -->
+    <xsl:template name="formatDate">
+        <xsl:param name="date"/>
+        <xsl:value-of select="concat(substring($date,9,2),'.',substring($date,6,2),'.',substring($date,1,4))"/>
+    </xsl:template>
+    <!-- Labels -->
+    <xsl:template name="label">
+        <xsl:param name="elementName"/>
+        <xsl:param name="elementId" select="''"/>
+        <xsl:choose>
+            <xsl:when test="$elementId != ''">
+                <xsl:value-of select="($label//element[@name=$elementName and @id=$elementId]/label)[1]"/>
+            </xsl:when>
+            <xsl:otherwise>
+                <xsl:value-of select="($label//element[@name=$elementName]/label)[1]"/>
+            </xsl:otherwise>
+        </xsl:choose>
+    </xsl:template>
+    <!-- Codelists -->
+    <xsl:template name="codelistLabel">
+        <xsl:param name="code"/>
+        <xsl:param name="path"/>
+        <xsl:value-of select="$codelists//codelist[@name=$path]/entry[code=$code]/label"/>
+    </xsl:template>
+    <!-- Main -->
+    <xsl:template match="che:CHE_MD_Metadata">
+        <xsl:variable name="identifier" select="gmd:fileIdentifier/gco:CharacterString"/>
+        <xsl:variable name="citationTitle" select=".//gmd:citation/gmd:CI_Citation/gmd:title/gmd:PT_FreeText/gmd:textGroup/gmd:LocalisedCharacterString[@locale='#FR']"/>
+        <xsl:variable name="abstractFR" select=".//gmd:abstract/gmd:PT_FreeText/gmd:textGroup/gmd:LocalisedCharacterString[@locale='#FR']"/>
+        <xsl:variable name="urlBase" select="'https://www.geocat.ch/geonetwork/srv/api/records/'"/>
+        <xsl:variable name="urlSimple" select="concat($urlBase, $identifier, '/formatters/vs_simple_fr?language=fre')"/>
+        <xsl:variable name="urlFull" select="concat($urlBase, $identifier, '/formatters/vs_full_fr?language=fre')"/>
+        <xsl:variable name="urlPDF" select="concat($urlBase, $identifier, '/formatters/vs_simple_fr?width=_100&amp;mdpath=md.format.pdf&amp;output=pdf&amp;approved=true')"/>
+        <!-- Content -->
+        <html>
+            <!-- Page title -->
+            <head>
+                <title>Canton du Valais - Catalogue de métadonnées</title>
+            </head>
+            <body>
+                <table>
+                    <tr>
+                        <td>
+                            <a href="http://www.vs.ch" target="_blank">
+                                <img src="https://www.vs.ch/documents/17311/1860458/logoVS78px/f406b530-5ee3-40b0-9c1e-00069d011f89?t=1462889171734" alt="Logo VS"/>
+                            </a>
+                        </td>
+                        <td>
+                            <a href="https://www.geocat.ch/geonetwork/srv/fre/md.viewer#/full_view/{$identifier}" target="_blank">
+                                <img src="https://www.vs.ch/documents/17311/472429/logo_geocat" alt="Logo GeoCat"/>
+                            </a>
+                        </td>
+                    </tr>
+                </table>
+                <!-- Displayed title -->
+                <h1>Catalogue métadonnées - Simple</h1>
+                <table>
+                    <tr>
+                        <td><a href="{$urlPDF}" target="_blank">Imprimer</a></td>
+                        <td>
+                            Présentation:
+                            <a href="{$urlSimple}" target="_self">Simple</a> /
+                            <a href="{$urlFull}" target="_self">Complète</a>
+                        </td>
+                    </tr>
+                </table>
+
+                <!-- Title -->
+                <p><xsl:value-of select="$citationTitle"/></p>
+
+                <!-- Thumbnail -->
+                <p>
+                    <img alt="Graphic Overview">
+                        <xsl:attribute name="src">
+                            <xsl:value-of select=".//gmd:graphicOverview/gmd:MD_BrowseGraphic/gmd:fileName/gco:CharacterString"/>
+                        </xsl:attribute>
+                    </img>
+                </p>
+
+                <!-- Abstract -->
+                <p>
+                    <strong>
+                        <xsl:call-template name="label">
+                            <xsl:with-param name="elementName" select="'gmd:abstract'"/>
+                        </xsl:call-template>
+                    </strong><br/>
+                    <xsl:value-of select="$abstractFR"/>
+                </p>
+
+                <!-- Status -->
+                <p>
+                    <strong>
+                        <xsl:call-template name="label">
+                            <xsl:with-param name="elementName" select="'gmd:status'"/>
+                        </xsl:call-template>
+                    </strong>
+                    <xsl:text> </xsl:text>
+                    <xsl:variable name="statusCode" select=".//gmd:status/gmd:MD_ProgressCode/@codeListValue"/>
+                    <xsl:variable name="statusLabel" select="$codelists//codelist[@name='gmd:MD_ProgressCode']/entry[code=$statusCode]/label"/>
+                    <xsl:value-of select="string($statusLabel | $statusCode)"/>
+                </p>
+
+                <!-- Dates -->
+                <p>
+                    <!-- Creation date -->
+                    <xsl:variable name="creationDate" select=".//gmd:date/gmd:CI_Date[gmd:dateType/gmd:CI_DateTypeCode/@codeListValue='creation']/gmd:date/gco:Date"/>
+                    <xsl:if test="$creationDate">
+                        <xsl:variable name="creationLabel" select="$codelists//codelist[@name='gmd:CI_DateTypeCode']/entry[code='creation']/label"/>
+                        <xsl:value-of select="$creationLabel"/>
+                        <xsl:text>: </xsl:text>
+                        <xsl:call-template name="formatDate">
+                            <xsl:with-param name="date" select="$creationDate"/>
+                        </xsl:call-template>
+                    </xsl:if>
+                    <br/>
+                    <!-- Revision date -->
+                    <xsl:variable name="revisionDate" select=".//gmd:date/gmd:CI_Date[gmd:dateType/gmd:CI_DateTypeCode/@codeListValue='revision']/gmd:date/gco:Date"/>
+                    <xsl:if test="$revisionDate">
+                        <xsl:variable name="revisionLabel" select="$codelists//codelist[@name='gmd:CI_DateTypeCode']/entry[code='revision']/label"/>
+                        <xsl:value-of select="$revisionLabel"/>
+                        <xsl:text>: </xsl:text>
+                        <xsl:call-template name="formatDate">
+                            <xsl:with-param name="date" select="$revisionDate"/>
+                        </xsl:call-template>
+                    </xsl:if>
+                </p>
+
+                <!-- Contact -->
+                <p>
+                <strong>
+                    <xsl:call-template name="label">
+                        <xsl:with-param name="elementName" select="'gmd:identificationInfo'"/>
+                    </xsl:call-template>
+                </strong><br/>
+                    <!-- Labels -->
+                    <xsl:variable name="custodian" select="$codelists//codelist[@name='gmd:CI_RoleCode']/entry[code='custodian']/label"/>
+                    <strong><xsl:value-of select="$custodian"/></strong><br/>
+                    <xsl:value-of select="substring-before(.//gmd:organisationName/gmd:PT_FreeText/gmd:textGroup/gmd:LocalisedCharacterString[@locale='#FR'], ' - ')"/><br/>
+                    <!-- Organisation -->
+                    <xsl:value-of select=".//gmd:citedResponsibleParty/che:CHE_CI_ResponsibleParty/che:organisationAcronym/gmd:PT_FreeText/gmd:textGroup/gmd:LocalisedCharacterString[@locale='#FR']"/><br/>
+                    <!-- Adress -->
+                    <xsl:value-of select=".//che:CHE_MD_DataIdentification/gmd:pointOfContact/che:CHE_CI_ResponsibleParty/gmd:contactInfo/gmd:CI_Contact/gmd:address/che:CHE_CI_Address/che:streetName/gco:CharacterString"/>
+                    <xsl:text> </xsl:text>
+                    <xsl:value-of select=".//che:CHE_MD_DataIdentification/gmd:pointOfContact/che:CHE_CI_ResponsibleParty/gmd:contactInfo/gmd:CI_Contact/gmd:address/che:CHE_CI_Address/che:streetNumber/gco:CharacterString"/>
+                    <br/>
+                    <!-- City & Postal Code -->
+                    <xsl:value-of select=".//che:CHE_MD_DataIdentification/gmd:pointOfContact/che:CHE_CI_ResponsibleParty/gmd:contactInfo/gmd:CI_Contact/gmd:address/che:CHE_CI_Address/gmd:postalCode/gco:CharacterString"/>
+                    <xsl:text> </xsl:text>
+                    <xsl:value-of select=".//che:CHE_MD_DataIdentification/gmd:pointOfContact/che:CHE_CI_ResponsibleParty/gmd:contactInfo/gmd:CI_Contact/gmd:address/che:CHE_CI_Address/gmd:city/gco:CharacterString"/>
+                    <br/>
+                    <!-- Phone -->
+                    <xsl:value-of select=".//che:CHE_MD_DataIdentification/gmd:pointOfContact/che:CHE_CI_ResponsibleParty/gmd:contactInfo/gmd:CI_Contact/gmd:phone/che:CHE_CI_Telephone/gmd:voice/gco:CharacterString"/>
+                    <br/>
+                    <!-- Website -->
+                    <a>
+                        <xsl:attribute name="href">
+                            <xsl:value-of select=".//che:CHE_MD_DataIdentification/gmd:pointOfContact/che:CHE_CI_ResponsibleParty/gmd:contactInfo/gmd:CI_Contact/gmd:onlineResource/gmd:CI_OnlineResource/gmd:linkage/gmd:URL"/>
+                        </xsl:attribute>
+                        <xsl:value-of select=".//che:CHE_MD_DataIdentification/gmd:pointOfContact/che:CHE_CI_ResponsibleParty/gmd:contactInfo/gmd:CI_Contact/gmd:onlineResource/gmd:CI_OnlineResource/gmd:linkage/gmd:URL"/>
+                    </a>
+                    <br/>
+                    <!-- Email -->
+                    <xsl:variable name="email" select=".//che:CHE_MD_DataIdentification/gmd:pointOfContact/che:CHE_CI_ResponsibleParty/gmd:contactInfo/gmd:CI_Contact/gmd:address/che:CHE_CI_Address/gmd:electronicMailAddress/gco:CharacterString"/>
+                    <a>
+                        <xsl:attribute name="href">
+                            <xsl:text>mailto:</xsl:text>
+                            <xsl:value-of select="$email"/>
+                        </xsl:attribute>
+                        <xsl:value-of select="$email"/>
+                    </a>
+                </p>
+            </body>
+        </html>
+    </xsl:template>
+</xsl:stylesheet>
