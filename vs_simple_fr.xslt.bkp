@@ -4,7 +4,7 @@
     xmlns:che="http://www.geocat.ch/2008/che"
     xmlns:gmd="http://www.isotc211.org/2005/gmd"
     xmlns:gco="http://www.isotc211.org/2005/gco">
-
+    
     <!-- === RESSOURCES EXTERNES === -->
     <xsl:variable name="label" select="document('root/schemas/iso19139/labels.xml')"/>
     <xsl:variable name="codelists" select="document('root/schemas/iso19139/codelists.xml')"/>
@@ -43,6 +43,9 @@
         <xsl:variable name="citationTitle" select=".//gmd:citation/gmd:CI_Citation/gmd:title/gmd:PT_FreeText/gmd:textGroup/gmd:LocalisedCharacterString[@locale='#FR']"/>
         <xsl:variable name="abstractFR" select=".//gmd:abstract/gmd:PT_FreeText/gmd:textGroup/gmd:LocalisedCharacterString[@locale='#FR']"/>
         <xsl:variable name="thumbnail" select=".//gmd:graphicOverview/gmd:MD_BrowseGraphic/gmd:fileName/gco:CharacterString"/>
+        <xsl:variable name="thumbnailAlt" select=".//gmd:identificationInfo/che:CHE_MD_DataIdentification/gmd:citation/gmd:CI_Citation/gmd:title/gmd:PT_FreeText/gmd:textGroup/gmd:LocalisedCharacterString[@locale='#FR']"/>
+        <xsl:variable name="thumbnailTitle" select=".//gmd:identificationInfo/che:CHE_MD_DataIdentification/gmd:citation/gmd:CI_Citation/gmd:title/gmd:PT_FreeText/gmd:textGroup/gmd:LocalisedCharacterString[@locale='#FR']"/>
+        
 
         <!-- Statut -->
         <xsl:variable name="statusCode" select=".//gmd:status/gmd:MD_ProgressCode/@codeListValue"/>
@@ -56,14 +59,14 @@
 
         <!-- Contact -->
         <xsl:variable name="custodian" select="$codelists//codelist[@name='gmd:CI_RoleCode']/entry[code='custodian']/label"/>
-        <xsl:variable name="orgName" select="substring-before(.//gmd:organisationName/gmd:PT_FreeText/gmd:textGroup/gmd:LocalisedCharacterString[@locale='#FR'], ' - ')"/>
-        <xsl:variable name="orgAcronym" select=".//gmd:citedResponsibleParty/che:CHE_CI_ResponsibleParty/che:organisationAcronym/gmd:PT_FreeText/gmd:textGroup/gmd:LocalisedCharacterString[@locale='#FR']"/>
+        <xsl:variable name="orgName" select="substring-before(.//gmd:citedResponsibleParty/che:CHE_CI_ResponsibleParty/gmd:organisationName/gmd:PT_FreeText/gmd:textGroup/gmd:LocalisedCharacterString[@locale='#FR'], ' - ')"/>
+        <xsl:variable name="orgAcronym" select=".//gmd:citedResponsibleParty/che:CHE_CI_ResponsibleParty/che:organisationAcronym/gmd:PT_FreeText/gmd:textGroup/gmd:LocalisedCharacterString[@locale='#FR']"/>        
         <xsl:variable name="streetName" select=".//che:CHE_MD_DataIdentification/gmd:pointOfContact/che:CHE_CI_ResponsibleParty/gmd:contactInfo/gmd:CI_Contact/gmd:address/che:CHE_CI_Address/che:streetName/gco:CharacterString"/>
         <xsl:variable name="streetNumber" select=".//che:CHE_MD_DataIdentification/gmd:pointOfContact/che:CHE_CI_ResponsibleParty/gmd:contactInfo/gmd:CI_Contact/gmd:address/che:CHE_CI_Address/che:streetNumber/gco:CharacterString"/>
         <xsl:variable name="postalCode" select=".//che:CHE_MD_DataIdentification/gmd:pointOfContact/che:CHE_CI_ResponsibleParty/gmd:contactInfo/gmd:CI_Contact/gmd:address/che:CHE_CI_Address/gmd:postalCode/gco:CharacterString"/>
         <xsl:variable name="city" select=".//che:CHE_MD_DataIdentification/gmd:pointOfContact/che:CHE_CI_ResponsibleParty/gmd:contactInfo/gmd:CI_Contact/gmd:address/che:CHE_CI_Address/gmd:city/gco:CharacterString"/>
         <xsl:variable name="phone" select=".//che:CHE_MD_DataIdentification/gmd:pointOfContact/che:CHE_CI_ResponsibleParty/gmd:contactInfo/gmd:CI_Contact/gmd:phone/che:CHE_CI_Telephone/gmd:voice/gco:CharacterString"/>
-        <xsl:variable name="website" select=".//che:CHE_MD_DataIdentification/gmd:pointOfContact/che:CHE_CI_ResponsibleParty/gmd:contactInfo/gmd:CI_Contact/gmd:onlineResource/gmd:CI_OnlineResource/gmd:linkage/gmd:URL"/>
+        <xsl:variable name="website" select=".//che:CHE_MD_DataIdentification/gmd:pointOfContact/che:CHE_CI_ResponsibleParty/gmd:contactInfo/gmd:CI_Contact/gmd:onlineResource/gmd:CI_OnlineResource/gmd:linkage/che:PT_FreeURL/che:URLGroup/che:LocalisedURL[@locale='#FR']"/>
         <xsl:variable name="email" select=".//che:CHE_MD_DataIdentification/gmd:pointOfContact/che:CHE_CI_ResponsibleParty/gmd:contactInfo/gmd:CI_Contact/gmd:address/che:CHE_CI_Address/gmd:electronicMailAddress/gco:CharacterString"/>
 
         <!-- === HTML === -->
@@ -86,18 +89,22 @@
                 </header>
 
                 <nav class="nav-links">
-                    <a href="{$urlPDF}" target="_blank">Imprimer</a>
+                    <a href="{$urlPDF}" target="_blank">🖨️ Imprimer la fiche (PDF)</a>
                     <span>Présentation :</span>
                     <a href="{$urlSimple}" target="_self">Simple</a> /
                     <a href="{$urlFull}" target="_self">Complète</a>
                 </nav>
+
+               <nav class="nav-links">
+                    <a href="https://www.geocat.ch/geonetwork/srv/fre/md.format.html?xsl=vs_simple_de&amp;uuid={$identifier}" target="_blank">🇩🇪 Version allemande</a>
+                </nav>                
 
                 <section class="metadata-title">
                     <h2><xsl:value-of select="$citationTitle"/></h2>
                 </section>
 
                 <section class="metadata-thumbnail">
-                    <img src="{$thumbnail}" alt="Aperçu graphique"/>
+                    <img src="{$thumbnail}" alt="{$thumbnailAlt}" title="{$thumbnailTitle}"/>
                 </section>
 
                 <section class="metadata-abstract">
@@ -145,7 +152,8 @@
                             <xsl:with-param name="elementName" select="'gmd:identificationInfo'"/>
                         </xsl:call-template>
                     </h3>
-                    <p class="contact-role"><xsl:value-of select="$custodian"/></p>
+                    <h4 class="contact-role"><xsl:value-of select="$custodian"/></h4>
+                    <p class="contact-name"><xsl:value-of select="$orgName"/></p>
                     <p class="contact-aconym"><xsl:value-of select="$orgAcronym"/></p>
                     <p class="contact-address">
                         <xsl:value-of select="$streetName"/>
