@@ -296,7 +296,6 @@
 									<xsl:when test="gco:CharacterString = 'ger' ">Allemand</xsl:when>
 									<xsl:otherwise><xsl:value-of select="gco:CharacterString"/></xsl:otherwise>
 								</xsl:choose>
-							<!--<xsl:value-of select="gco:CharacterString"/>-->
 							</li>
 						</xsl:for-each>
 					</ul>

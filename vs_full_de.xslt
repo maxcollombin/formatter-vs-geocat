@@ -33,7 +33,8 @@
         <xsl:variable name="identifier" select="gmd:fileIdentifier/gco:CharacterString"/>
         <xsl:variable name="urlBase" select="'https://geocat-int.dev.bgdi.ch/geonetwork/srv/api/records/'"/>
         <xsl:variable name="citationTitle" select=".//gmd:citation/gmd:CI_Citation/gmd:title/gmd:PT_FreeText/gmd:textGroup/gmd:LocalisedCharacterString[@locale='#DE']"/>
-        <xsl:variable name="abstract" select=".//gmd:abstract/gmd:PT_FreeText/gmd:textGroup/gmd:LocalisedCharacterString[@locale='#DE']"/>
+        <xsl:variable name="abstractFR" select=".//gmd:abstract/gmd:PT_FreeText/gmd:textGroup/gmd:LocalisedCharacterString[@locale='#DE']"/>
+        <xsl:variable name="purpose" select=".//gmd:purpose/gmd:PT_FreeText/gmd:textGroup/gmd:LocalisedCharacterString[@locale='#DE']"/>
         <xsl:variable name="thumbnail" select=".//gmd:graphicOverview/gmd:MD_BrowseGraphic/gmd:fileName/gco:CharacterString"/>
         <xsl:variable name="statusCode" select=".//gmd:status/gmd:MD_ProgressCode/@codeListValue"/>
         <xsl:variable name="creationDate" select=".//gmd:date/gmd:CI_Date[gmd:dateType/gmd:CI_DateTypeCode/@codeListValue='creation']/gmd:date/gco:Date"/>
@@ -43,7 +44,7 @@
         <xsl:variable name="orgName" select="substring-before(.//gmd:citedResponsibleParty/che:CHE_CI_ResponsibleParty/gmd:organisationName/gmd:PT_FreeText/gmd:textGroup/gmd:LocalisedCharacterString[@locale='#DE'], ' - ')"/>
         <xsl:variable name="orgAcronym" select=".//gmd:citedResponsibleParty/che:CHE_CI_ResponsibleParty/che:organisationAcronym/gmd:PT_FreeText/gmd:textGroup/gmd:LocalisedCharacterString[@locale='#DE']"/>
 
-        <html lang="de">
+        <html lang="fr">
             <head>
                 <meta charset="UTF-8"/>
                 <meta name="viewport" content="width=device-width, initial-scale=1"/>
@@ -238,7 +239,7 @@
 
                 <main>
                     <nav class="presentation-nav">
-                        <a href="{concat($urlBase, $identifier, '/formatters/vs_simple_de?width=_100&amp;mdpath=md.format.pdf&amp;output=pdf&amp;approved=true')}" 
+                        <a href="{concat($urlBase, $identifier, '/formatters/vs_full_de?width=_100&amp;mdpath=md.format.pdf&amp;output=pdf&amp;approved=true')}" 
                            target="_blank">🖨️ Datenblatt drucken (PDF)</a>
 
                         <div>
@@ -248,7 +249,7 @@
                             <a href="{concat($urlBase, $identifier, '/formatters/vs_full_de?language=ger')}">Komplett</a>
                         </div>
                         <div class="language-link">
-                            <a href="{concat($urlBase, $identifier, '/formatters/vs_simple_fr?language=fre')}" 
+                            <a href="{concat($urlBase, $identifier, '/formatters/vs_full_fr?language=fre')}" 
                                 target="_blank">🇫🇷 Französische Fassung</a>
                         </div>
                     </nav>
@@ -262,10 +263,17 @@
                             <img src="{$thumbnail}" alt="Vorschau von {$citationTitle}"/>
                         </xsl:if>
 
-                        <xsl:if test="$abstract != ''">
+                        <xsl:if test="$abstractFR != ''">
                             <section>
                                 <h2 class="section-title">Kurze Beschreibung</h2>
-                                <p><xsl:value-of select="$abstract"/></p>
+                                <p><xsl:value-of select="$abstractFR"/></p>
+                            </section>
+                        </xsl:if>
+
+                        <xsl:if test="$purpose != ''">
+                            <section>
+                                <h2 class="section-title">Zweck</h2>
+                                <p><xsl:value-of select="$purpose"/></p>
                             </section>
                         </xsl:if>
 
