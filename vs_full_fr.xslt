@@ -9,11 +9,11 @@
     <xsl:template name="formatDate">
         <xsl:param name="date"/>
         <xsl:choose>
-            <!-- Si c'est déjà une date au format YYYY-MM-DD (10 caractères) -->
+            <!-- Date au format YYYY-MM-DD (10 caractères) -->
             <xsl:when test="string-length($date) = 10">
                 <xsl:value-of select="concat(substring($date,9,2),'.',substring($date,6,2),'.',substring($date,1,4))"/>
             </xsl:when>
-            <!-- Si c'est un DateTime (plus de 10 caractères), extraire la partie date -->
+            <!-- DateTime (plus de 10 caractères) -->
             <xsl:when test="string-length($date) > 10">
                 <xsl:variable name="dateOnly" select="substring($date,1,10)"/>
                 <xsl:value-of select="concat(substring($dateOnly,9,2),'.',substring($dateOnly,6,2),'.',substring($dateOnly,1,4))"/>
@@ -120,7 +120,7 @@
         <xsl:variable name="hasVector" select="$spatialTypes[. = 'vector']"/>
         <xsl:variable name="hasGrid" select="$spatialTypes[. = 'grid']"/>
         
-        <!-- Résolution vectorielle (échelle) -->
+        <!-- Dénominateur d'échelle (vecteur) -->
         <xsl:if test="$hasVector">
             <xsl:variable name="denominator" select=".//gmd:spatialResolution/gmd:MD_Resolution/gmd:equivalentScale/gmd:MD_RepresentativeFraction/gmd:denominator/gco:Integer"/>
             <xsl:if test="$denominator != ''">
@@ -131,7 +131,7 @@
             </xsl:if>
         </xsl:if>
         
-        <!-- Résolution raster (distance) -->
+        <!-- Résolution (raster) -->
         <xsl:if test="$hasGrid">
             <xsl:variable name="distance" select=".//gmd:spatialResolution/gmd:MD_Resolution/gmd:distance/gco:Distance"/>
             <xsl:variable name="uom" select=".//gmd:spatialResolution/gmd:MD_Resolution/gmd:distance/gco:Distance/@uom"/>
@@ -149,7 +149,27 @@
         </xsl:if>
     </xsl:template>
 
-    <!-- Template pour formater le texte de législation -->
+    <!-- Fréquence de mise à jour -->
+    <xsl:template name="getMaintenanceFrequencyLabel">
+        <xsl:param name="frequencyCode"/>
+        <xsl:choose>
+            <xsl:when test="$frequencyCode = 'continual'">Continue</xsl:when>
+            <xsl:when test="$frequencyCode = 'daily'">Journalière</xsl:when>
+            <xsl:when test="$frequencyCode = 'weekly'">Hebdomadaire</xsl:when>
+            <xsl:when test="$frequencyCode = 'fortnightly'">Bi-mensuelle</xsl:when>
+            <xsl:when test="$frequencyCode = 'monthly'">Mensuelle</xsl:when>
+            <xsl:when test="$frequencyCode = 'quarterly'">Trimestrielle</xsl:when>
+            <xsl:when test="$frequencyCode = 'biannually'">Bi-annuelle</xsl:when>
+            <xsl:when test="$frequencyCode = 'annually'">Annuelle</xsl:when>
+            <xsl:when test="$frequencyCode = 'asNeeded'">Lorsque nécessaire</xsl:when>
+            <xsl:when test="$frequencyCode = 'irregular'">Irrégulière</xsl:when>
+            <xsl:when test="$frequencyCode = 'notPlanned'">Non planifiée</xsl:when>
+            <xsl:when test="$frequencyCode = 'unknown'">Inconnue</xsl:when>
+            <xsl:otherwise><xsl:value-of select="$frequencyCode"/></xsl:otherwise>
+        </xsl:choose>
+    </xsl:template>
+
+    <!-- Formattage du texte pour les bases légales -->
     <xsl:template name="formatLegislationText">
         <xsl:param name="text"/>
         <xsl:choose>
@@ -157,12 +177,10 @@
                 <xsl:variable name="beforeFirst" select="substring-before($text, '*')"/>
                 <xsl:variable name="afterFirst" select="substring-after($text, '*')"/>
                 
-                <!-- Afficher le texte avant le premier * s'il y en a un -->
                 <xsl:if test="normalize-space($beforeFirst) != ''">
                     <xsl:value-of select="normalize-space($beforeFirst)"/><br/>
                 </xsl:if>
                 
-                <!-- Traiter le reste récursivement -->
                 <xsl:call-template name="formatLegislationTextRecursive">
                     <xsl:with-param name="text" select="$afterFirst"/>
                 </xsl:call-template>
@@ -173,7 +191,6 @@
         </xsl:choose>
     </xsl:template>
 
-    <!-- Template récursif pour traiter chaque partie après un * -->
     <xsl:template name="formatLegislationTextRecursive">
         <xsl:param name="text"/>
         <xsl:choose>
@@ -181,18 +198,15 @@
                 <xsl:variable name="currentPart" select="substring-before($text, '*')"/>
                 <xsl:variable name="remaining" select="substring-after($text, '*')"/>
                 
-                <!-- Afficher la partie courante -->
                 <xsl:if test="normalize-space($currentPart) != ''">
                     <xsl:value-of select="normalize-space($currentPart)"/><br/>
                 </xsl:if>
                 
-                <!-- Continuer avec le reste -->
                 <xsl:call-template name="formatLegislationTextRecursive">
                     <xsl:with-param name="text" select="$remaining"/>
                 </xsl:call-template>
             </xsl:when>
             <xsl:otherwise>
-                <!-- Dernière partie -->
                 <xsl:if test="normalize-space($text) != ''">
                     <xsl:value-of select="normalize-space($text)"/>
                 </xsl:if>
@@ -200,13 +214,61 @@
         </xsl:choose>
     </xsl:template>
 
-    <!-- === Template principal === -->
+    <!-- Formattage des organisations hiérarchiques -->
+    <xsl:template name="formatHierarchicalOrganization">
+        <xsl:param name="orgText"/>
+        <xsl:choose>
+            <xsl:when test="contains($orgText, ' - ')">
+                <xsl:call-template name="formatHierarchicalOrganizationRecursive">
+                    <xsl:with-param name="text" select="$orgText"/>
+                </xsl:call-template>
+            </xsl:when>
+            <xsl:otherwise>
+                <strong><xsl:value-of select="$orgText"/></strong>
+            </xsl:otherwise>
+        </xsl:choose>
+    </xsl:template>
+
+    <xsl:template name="formatHierarchicalOrganizationRecursive">
+        <xsl:param name="text"/>
+        <xsl:param name="level" select="1"/>
+        <xsl:choose>
+            <xsl:when test="contains($text, ' - ')">
+                <xsl:variable name="currentPart" select="substring-before($text, ' - ')"/>
+                <xsl:variable name="remaining" select="substring-after($text, ' - ')"/>
+                
+                <xsl:if test="normalize-space($currentPart) != ''">
+                    <xsl:choose>
+                        <xsl:when test="$level = 1">
+                            <strong><xsl:value-of select="normalize-space($currentPart)"/></strong><br/>
+                        </xsl:when>
+                        <xsl:otherwise>
+                            <xsl:value-of select="normalize-space($currentPart)"/><br/>
+                        </xsl:otherwise>
+                    </xsl:choose>
+                </xsl:if>
+                
+                <xsl:call-template name="formatHierarchicalOrganizationRecursive">
+                    <xsl:with-param name="text" select="$remaining"/>
+                    <xsl:with-param name="level" select="$level + 1"/>
+                </xsl:call-template>
+            </xsl:when>
+            <xsl:otherwise>
+                <xsl:if test="normalize-space($text) != ''">
+                    <xsl:value-of select="normalize-space($text)"/>
+                </xsl:if>
+            </xsl:otherwise>
+        </xsl:choose>
+    </xsl:template>
+
+    <!-- Template principal -->
     <xsl:template match="che:CHE_MD_Metadata">
-        <!-- Variables -->
+            
+        <!-- Définition des variables (xpath) -->
         <xsl:variable name="identifier" select="gmd:fileIdentifier/gco:CharacterString"/>
         <xsl:variable name="urlBase" select="'https://geocat-int.dev.bgdi.ch/geonetwork/srv/api/records/'"/>
         <xsl:variable name="citationTitle" select=".//gmd:citation/gmd:CI_Citation/gmd:title/gmd:PT_FreeText/gmd:textGroup/gmd:LocalisedCharacterString[@locale='#FR']"/>
-        <xsl:variable name="abstractFR" select=".//gmd:abstract/gmd:PT_FreeText/gmd:textGroup/gmd:LocalisedCharacterString[@locale='#FR']"/>
+        <xsl:variable name="abstract" select=".//gmd:abstract/gmd:PT_FreeText/gmd:textGroup/gmd:LocalisedCharacterString[@locale='#FR']"/>
         <xsl:variable name="purpose" select=".//gmd:purpose/gmd:PT_FreeText/gmd:textGroup/gmd:LocalisedCharacterString[@locale='#FR']"/>
         <xsl:variable name="thumbnail" select=".//gmd:graphicOverview/gmd:MD_BrowseGraphic/gmd:fileName/gco:CharacterString"/>
         <xsl:variable name="statusCode" select=".//gmd:status/gmd:MD_ProgressCode/@codeListValue"/>
@@ -227,11 +289,29 @@
         <xsl:variable name="useLimitation" select=".//gmd:useLimitation/gmd:PT_FreeText/gmd:textGroup/gmd:LocalisedCharacterString[@locale='#FR']"/>
         <xsl:variable name="otherConstraints" select=".//gmd:otherConstraints/gmd:PT_FreeText/gmd:textGroup/gmd:LocalisedCharacterString[@locale='#FR']"/>
         <xsl:variable name="legislationTitle" select=".//che:legislationInformation/che:CHE_MD_Legislation/che:title/gmd:CI_Citation/gmd:title/gmd:PT_FreeText/gmd:textGroup/gmd:LocalisedCharacterString[@locale='#FR']"/>
+        <xsl:variable name="maintenanceFrequency" select=".//gmd:maintenanceAndUpdateFrequency/gmd:MD_MaintenanceFrequencyCode/@codeListValue"/>
+        <xsl:variable name="maintenanceNote" select=".//gmd:maintenanceNote/gmd:PT_FreeText/gmd:textGroup/gmd:LocalisedCharacterString[@locale='#FR']"/>
+        <xsl:variable name="catalogueCreationDate" select=".//gmd:featureCatalogueCitation/gmd:CI_Citation/gmd:date/gmd:CI_Date/gmd:date/gco:Date"/>
+        <xsl:variable name="catalogueTitle" select=".//gmd:featureCatalogueCitation/gmd:CI_Citation/gmd:title/gmd:PT_FreeText/gmd:textGroup/gmd:LocalisedCharacterString[@locale='#FR']"/>
+        <xsl:variable name="dataModelURL" select=".//che:dataModel/che:PT_FreeURL/che:URLGroup/che:LocalisedURL[@locale='#FR']"/>
+        <xsl:variable name="portrayalTitle" select=".//gmd:portrayalCatalogueInfo/che:CHE_MD_PortrayalCatalogueReference/gmd:portrayalCatalogueCitation/gmd:CI_Citation/gmd:title/gmd:PT_FreeText/gmd:textGroup/gmd:LocalisedCharacterString[@locale='#FR']"/>
+        <xsl:variable name="portrayalDate" select=".//gmd:portrayalCatalogueInfo/che:CHE_MD_PortrayalCatalogueReference/gmd:portrayalCatalogueCitation/gmd:CI_Citation/gmd:date/gmd:CI_Date/gmd:date/gco:Date"/>
+        <xsl:variable name="portrayalURL" select=".//gmd:portrayalCatalogueInfo/che:CHE_MD_PortrayalCatalogueReference/che:portrayalCatalogueURL/che:PT_FreeURL/che:URLGroup/che:LocalisedURL[@locale='#FR']"/>
+        <xsl:variable name="internalResource" select=".//gmd:environmentDescription/gmd:PT_FreeText/gmd:textGroup/gmd:LocalisedCharacterString[@locale='#FR']"/>
+        <xsl:variable name="internalResourceID" select=".//gmd:MD_Identifier/gmd:code/gco:CharacterString"/>
+        <xsl:variable name="resourceFormats" select=".//gmd:MD_Format"/>
         <xsl:variable name="metadataStandardName" select=".//gmd:metadataStandardName/gco:CharacterString"/>
-        <xsl:variable name="contact" select=".//che:CHE_MD_DataIdentification/gmd:pointOfContact/che:CHE_CI_ResponsibleParty"/>
-        <xsl:variable name="address" select="$contact/gmd:contactInfo/gmd:CI_Contact/gmd:address/che:CHE_CI_Address"/>
-        <xsl:variable name="orgName" select="substring-before(.//gmd:citedResponsibleParty/che:CHE_CI_ResponsibleParty/gmd:organisationName/gmd:PT_FreeText/gmd:textGroup/gmd:LocalisedCharacterString[@locale='#FR'], ' - ')"/>
-        <xsl:variable name="orgAcronym" select=".//gmd:citedResponsibleParty/che:CHE_CI_ResponsibleParty/che:organisationAcronym/gmd:PT_FreeText/gmd:textGroup/gmd:LocalisedCharacterString[@locale='#FR']"/>
+        <xsl:variable name="custodianOrgContact" select=".//che:CHE_MD_DataIdentification/gmd:pointOfContact/che:CHE_CI_ResponsibleParty"/>
+        <xsl:variable name="distributorOrgContact" select=".//gmd:MD_Distributor/gmd:distributorContact/che:CHE_CI_ResponsibleParty"/>
+        <xsl:variable name="custodianOrgAddress" select="$custodianOrgContact/gmd:contactInfo/gmd:CI_Contact/gmd:address/che:CHE_CI_Address"/>
+        <xsl:variable name="distributorOrgAddress" select="$distributorOrgContact/gmd:contactInfo/gmd:CI_Contact/gmd:address/che:CHE_CI_Address"/>
+        <xsl:variable name="custodianOrgName" select="substring-before(.//gmd:citedResponsibleParty/che:CHE_CI_ResponsibleParty/gmd:organisationName/gmd:PT_FreeText/gmd:textGroup/gmd:LocalisedCharacterString[@locale='#FR'], ' - ')"/>
+        <xsl:variable name="distributorOrgName" select="$distributorOrgContact/gmd:organisationName/gmd:PT_FreeText/gmd:textGroup/gmd:LocalisedCharacterString[@locale='#FR']"/>
+        <xsl:variable name="custodianOrgAcronym" select=".//gmd:citedResponsibleParty/che:CHE_CI_ResponsibleParty/che:organisationAcronym/gmd:PT_FreeText/gmd:textGroup/gmd:LocalisedCharacterString[@locale='#FR']"/>
+        <xsl:variable name="distributorOrgAcronym" select="$distributorOrgContact/che:organisationAcronym/gmd:PT_FreeText/gmd:textGroup/gmd:LocalisedCharacterString[@locale='#FR']"/>
+        <!-- Ressources en ligne -->
+        <!-- Pour les ressources en ligne, il n'est pas possible d'utiliser des variables globales dans la boucle xsl:for-each en XSLT 1.0. -->
+        <xsl:variable name="onlineResources" select=".//gmd:MD_DigitalTransferOptions/gmd:onLine"/>
 
         <html lang="fr">
             <head>
@@ -452,10 +532,10 @@
                             <img src="{$thumbnail}" alt="Aperçu de {$citationTitle}"/>
                         </xsl:if>
 
-                        <xsl:if test="$abstractFR != ''">
+                        <xsl:if test="$abstract != ''">
                             <section>
                                 <h2 class="section-title">Résumé de la ressource</h2>
-                                <p><xsl:value-of select="$abstractFR"/></p>
+                                <p><xsl:value-of select="$abstract"/></p>
                             </section>
                         </xsl:if>
 
@@ -466,6 +546,7 @@
                             </section>
                         </xsl:if>
 
+                        <!-- Informations sur la mise à jour -->
                         <section>
                             <h2 class="section-title">Informations sur la mise à jour</h2>
                             <table class="info-table">
@@ -494,7 +575,7 @@
                                             </td>
                                         </tr>
                                     </xsl:if>
-
+                                    <!-- Date de création -->
                                     <xsl:if test="$creationDate != ''">
                                         <tr>
                                             <td class="label">Date de création</td>
@@ -505,7 +586,7 @@
                                             </td>
                                         </tr>
                                     </xsl:if>
-                                    
+                                    <!-- Date de révision -->
                                     <xsl:if test="$revisionDate != ''">
                                         <tr>
                                             <td class="label">Date de révision</td>
@@ -516,6 +597,7 @@
                                             </td>
                                         </tr>
                                     </xsl:if>
+                                    <!-- Géodonnée de base -->
                                     <xsl:if test="$basicGeodataID != ''">
                                         <tr>
                                             <td class="label"> Géodonnée de base (fédéral)</td>
@@ -528,6 +610,7 @@
                             </table>
                         </section>
 
+                        <!-- Information de l'identification -->
                         <section>
                             <h2 class="section-title">Information de l'identification</h2>
                             <table class="info-table">
@@ -543,25 +626,25 @@
                                     <tr>
                                         <td class="label">Gestionnaire</td>
                                         <td>
-                                            <xsl:if test="$orgName != ''">
-                                                <strong><xsl:value-of select="$orgName"/></strong><br/>
+                                            <xsl:if test="$custodianOrgName != ''">
+                                                <strong><xsl:value-of select="$custodianOrgName"/></strong><br/>
                                             </xsl:if>
-                                            <xsl:if test="$orgAcronym != ''">
-                                                <xsl:value-of select="$orgAcronym"/><br/><br/>
+                                            <xsl:if test="$custodianOrgAcronym != ''">
+                                                <xsl:value-of select="$custodianOrgAcronym"/><br/><br/>
                                             </xsl:if>
                                             
                                             <!-- Adresse -->
-                                            <xsl:variable name="streetName" select="$address/che:streetName/gco:CharacterString"/>
-                                            <xsl:variable name="streetNumber" select="$address/che:streetNumber/gco:CharacterString"/>
+                                            <xsl:variable name="streetName" select="$custodianOrgAddress/che:streetName/gco:CharacterString"/>
+                                            <xsl:variable name="streetNumber" select="$custodianOrgAddress/che:streetNumber/gco:CharacterString"/>
                                             <xsl:if test="$streetName != '' or $streetNumber != ''">
                                                 <xsl:value-of select="$streetName"/>
                                                 <xsl:if test="$streetNumber != ''">
                                                     <xsl:text> </xsl:text><xsl:value-of select="$streetNumber"/>
                                                 </xsl:if>
                                                 <br/>
-                                                
-                                                <xsl:variable name="postalCode" select="$address/gmd:postalCode/gco:CharacterString"/>
-                                                <xsl:variable name="city" select="$address/gmd:city/gco:CharacterString"/>
+
+                                                <xsl:variable name="postalCode" select="$custodianOrgAddress/gmd:postalCode/gco:CharacterString"/>
+                                                <xsl:variable name="city" select="$custodianOrgAddress/gmd:city/gco:CharacterString"/>
                                                 <xsl:if test="$postalCode != '' or $city != ''">
                                                     <xsl:value-of select="$postalCode"/>
                                                     <xsl:if test="$city != ''">
@@ -572,17 +655,17 @@
                                             </xsl:if>
                                             
                                             <!-- Contact -->
-                                            <xsl:variable name="phone" select="$contact/gmd:contactInfo/gmd:CI_Contact/gmd:phone/che:CHE_CI_Telephone/gmd:voice/gco:CharacterString"/>
+                                            <xsl:variable name="phone" select="$custodianOrgContact/gmd:contactInfo/gmd:CI_Contact/gmd:phone/che:CHE_CI_Telephone/gmd:voice/gco:CharacterString"/>
                                             <xsl:if test="$phone != ''">
                                                 <div>Tél: <a href="tel:{$phone}"><xsl:value-of select="$phone"/></a></div>
                                             </xsl:if>
                                             
-                                            <xsl:variable name="email" select="$address/gmd:electronicMailAddress/gco:CharacterString"/>
+                                            <xsl:variable name="email" select="$custodianOrgAddress/gmd:electronicMailAddress/gco:CharacterString"/>
                                             <xsl:if test="$email != ''">
                                                 <div>Email: <a href="mailto:{$email}"><xsl:value-of select="$email"/></a></div>
                                             </xsl:if>
                                             
-                                            <xsl:variable name="website" select="$contact/gmd:contactInfo/gmd:CI_Contact/gmd:onlineResource/gmd:CI_OnlineResource/gmd:linkage/che:PT_FreeURL/che:URLGroup/che:LocalisedURL[@locale='#FR']"/>
+                                            <xsl:variable name="website" select="$custodianOrgContact/gmd:contactInfo/gmd:CI_Contact/gmd:onlineResource/gmd:CI_OnlineResource/gmd:linkage/che:PT_FreeURL/che:URLGroup/che:LocalisedURL[@locale='#FR']"/>
                                             <xsl:if test="$website != ''">
                                                 <div>Site web: <a href="{$website}" target="_blank"><xsl:value-of select="$website"/></a></div>
                                             </xsl:if>
@@ -729,27 +812,335 @@
                                                     <xsl:if test="position() != last()"><br/><br/></xsl:if>
                                                 </xsl:for-each>
                                             </td>
-                                        </tr>
+                                        </tr>                            
                                     </tbody>
                                 </table>
                             </section>
                         </xsl:if>
+
                         <!-- Mise à jour de la ressource  -->
                         <section>
                             <h2 class="section-title">Mise à jour de la ressource</h2>
+                            <xsl:if test="$maintenanceFrequency != ''">
+                                <table class="info-table">
+                                    <tbody>
+                                        <xsl:if test="$maintenanceFrequency != ''">
+                                            <tr>
+                                                <td class="label">Fréquence de mise à jour</td>
+                                                <td>
+                                                    <xsl:call-template name="getMaintenanceFrequencyLabel">
+                                                        <xsl:with-param name="frequencyCode" select="$maintenanceFrequency"/>
+                                                    </xsl:call-template>
+                                                </td>
+                                            </tr>
+                                        </xsl:if>
+                                        <xsl:if test="$maintenanceNote != ''">
+                                            <tr>
+                                                <td class="label">Remarque sur la mise à jour</td>
+                                                <td>
+                                                    <xsl:value-of select="$maintenanceNote"/>
+                                                </td>
+                                            </tr>
+                                        </xsl:if>
+                                    </tbody>
+                                </table>
+                            </xsl:if>
                         </section>
+
                         <!-- Catalogue d'objets et modèle  -->
                         <section>
                             <h2 class="section-title">Catalogue d'objets et modèle</h2>
+                            <xsl:if test="$catalogueCreationDate != '' or ($catalogueTitle != '' and $dataModelURL != '')">
+                                <table class="info-table">
+                                    <tbody>
+                                        <xsl:if test="$catalogueCreationDate != ''">
+                                            <tr>
+                                                <td class="label">Date de création</td>
+                                                <td>
+                                                    <xsl:call-template name="formatDate">
+                                                        <xsl:with-param name="date" select="$catalogueCreationDate"/>
+                                                    </xsl:call-template>
+                                                </td>
+                                            </tr>
+                                        </xsl:if>
+                                        <xsl:if test="$catalogueTitle != '' and $dataModelURL != ''">
+                                            <tr>
+                                                <td class="label">Lien</td>
+                                                <td>
+                                                    <a href="{$dataModelURL}" target="_blank">
+                                                        <xsl:value-of select="$catalogueTitle"/>
+                                                    </a>
+                                                </td>
+                                            </tr>
+                                        </xsl:if>
+                                    </tbody>
+                                </table>
+                            </xsl:if>
                         </section>
-                        <!-- Informations sur la réprésentation  -->
-                        <section>
-                            <h2 class="section-title">Informations sur la réprésentation</h2>
-                        </section>
+
+                        <!-- Informations sur la représentation  -->
+                        <xsl:if test="$portrayalDate != '' or ($portrayalTitle != '' and $portrayalURL != '')">
+                            <section>
+                                <h2 class="section-title">Informations sur la représentation</h2>
+                                <table class="info-table">
+                                    <tbody>
+                                        <xsl:if test="$portrayalDate != ''">
+                                            <tr>
+                                                <td class="label">Date de création</td>
+                                                <td>
+                                                    <xsl:call-template name="formatDate">
+                                                        <xsl:with-param name="date" select="$portrayalDate"/>
+                                                    </xsl:call-template>
+                                                </td>
+                                            </tr>
+                                        </xsl:if>
+                                        <xsl:if test="$portrayalTitle != '' and $portrayalURL != ''">
+                                            <tr>
+                                                <td class="label">Lien</td>
+                                                <td>
+                                                    <a href="{$portrayalURL}" target="_blank">
+                                                        <xsl:value-of select="$portrayalTitle"/>
+                                                    </a>
+                                                </td>
+                                            </tr>
+                                        </xsl:if>
+                                    </tbody>
+                                </table>
+                            </section>
+                        </xsl:if>
+
                         <!-- Informations sur la distribution  -->
                         <section>
                             <h2 class="section-title">Informations sur la distribution</h2>
+                            <xsl:if test="$onlineResources">
+                                <table class="info-table">
+                                    <tbody>
+                                        <xsl:for-each select="$onlineResources">
+
+                                            <!-- Tri personnalisé : priorité par type de service et fournisseur -->
+                                            <xsl:sort select="
+                                                (gmd:CI_OnlineResource/gmd:protocol/gco:CharacterString = 'ESRI:REST') * -5 +
+                                                (starts-with(gmd:CI_OnlineResource/gmd:protocol/gco:CharacterString, 'OGC:')) * -4 +
+                                                (gmd:CI_OnlineResource/gmd:protocol/gco:CharacterString = 'WWW:DOWNLOAD-APP'
+                                                  and gmd:CI_OnlineResource/gmd:name/gmd:PT_FreeText/gmd:textGroup/gmd:LocalisedCharacterString[@locale='#FR'] = 'OpenData Valais') * -3 +
+                                                (contains(gmd:CI_OnlineResource/gmd:name/gmd:PT_FreeText/gmd:textGroup/gmd:LocalisedCharacterString[@locale='#FR'], 'geodienste.ch')) * -2 +
+                                                (gmd:CI_OnlineResource/gmd:protocol/gco:CharacterString = 'CHTOPO:specialised-geoportal') * -1
+                                            " data-type="number"/>
+                                            <xsl:sort select="gmd:CI_OnlineResource/gmd:name/gmd:PT_FreeText/gmd:textGroup/gmd:LocalisedCharacterString[@locale='#FR']"/>
+                                            
+                                            <!-- Variables (contexte local) -->
+                                            <xsl:variable name="resourceName" select="gmd:CI_OnlineResource/gmd:name/gmd:PT_FreeText/gmd:textGroup/gmd:LocalisedCharacterString[@locale='#FR']"/>
+                                            <xsl:variable name="resourceDescription" select="gmd:CI_OnlineResource/gmd:description/gmd:PT_FreeText/gmd:textGroup/gmd:LocalisedCharacterString[@locale='#FR']"/>
+                                            <xsl:variable name="resourceURL" select="gmd:CI_OnlineResource/gmd:linkage/che:PT_FreeURL/che:URLGroup/che:LocalisedURL[@locale='#FR']"/>
+                                            <xsl:variable name="resourceProtocol" select="gmd:CI_OnlineResource/gmd:protocol/gco:CharacterString"/>
+                                            
+                                            <xsl:choose>
+
+                                                <!-- ESRI:REST -->
+                                                <xsl:when test="$resourceProtocol = 'ESRI:REST'">
+                                                    <tr>
+                                                        <td class="label">ArcGIS REST Services</td>
+                                                        <td>
+                                                            <a href="{$resourceURL}" target="_blank">
+                                                                <xsl:choose>
+                                                                    <xsl:when test="$resourceDescription != ''">
+                                                                        <xsl:value-of select="$resourceDescription"/>
+                                                                    </xsl:when>
+                                                                    <xsl:when test="$resourceName != ''">
+                                                                        <xsl:value-of select="$resourceName"/>
+                                                                    </xsl:when>
+                                                                    <xsl:otherwise>
+                                                                        <xsl:value-of select="$resourceURL"/>
+                                                                    </xsl:otherwise>
+                                                                </xsl:choose>
+                                                            </a>
+                                                        </td>
+                                                    </tr>
+                                                </xsl:when>
+
+                                                <!-- OGC:WFS -->
+                                                <xsl:when test="$resourceProtocol = 'OGC:WFS'">
+                                                    <xsl:if test="not(preceding-sibling::gmd:onLine[gmd:CI_OnlineResource/gmd:protocol/gco:CharacterString = 'OGC:WFS' and gmd:CI_OnlineResource/gmd:linkage/che:PT_FreeURL/che:URLGroup/che:LocalisedURL[@locale='#FR'] = $resourceURL])">
+                                                        <tr>
+                                                            <td class="label">OGC Web Feature Service (WFS)</td>
+                                                            <td>
+                                                                <xsl:for-each select="../gmd:onLine[gmd:CI_OnlineResource/gmd:protocol/gco:CharacterString = 'OGC:WFS' and gmd:CI_OnlineResource/gmd:linkage/che:PT_FreeURL/che:URLGroup/che:LocalisedURL[@locale='#FR'] = $resourceURL]">
+                                                                    <xsl:variable name="layerDescription" select="gmd:CI_OnlineResource/gmd:description/gmd:PT_FreeText/gmd:textGroup/gmd:LocalisedCharacterString[@locale='#FR']"/>
+                                                                    <xsl:if test="position() > 1"><br/></xsl:if>
+                                                                    <a href="{$resourceURL}" target="_blank">
+                                                                        <xsl:choose>
+                                                                            <xsl:when test="$layerDescription != ''">
+                                                                                <xsl:value-of select="$layerDescription"/>
+                                                                            </xsl:when>
+                                                                            <xsl:otherwise>Couche <xsl:value-of select="position()"/></xsl:otherwise>
+                                                                        </xsl:choose>
+                                                                    </a>
+                                                                </xsl:for-each>
+                                                            </td>
+                                                        </tr>
+                                                    </xsl:if>
+                                                </xsl:when>
+
+                                                <!-- OGC:WMS -->
+                                                <xsl:when test="$resourceProtocol = 'OGC:WMS'">
+                                                    <xsl:if test="not(preceding-sibling::gmd:onLine[gmd:CI_OnlineResource/gmd:protocol/gco:CharacterString = 'OGC:WMS' and gmd:CI_OnlineResource/gmd:linkage/che:PT_FreeURL/che:URLGroup/che:LocalisedURL[@locale='#FR'] = $resourceURL])">
+                                                        <tr>
+                                                            <td class="label">OGC Web Map Service (WMS)</td>
+                                                            <td>
+                                                                <xsl:for-each select="../gmd:onLine[gmd:CI_OnlineResource/gmd:protocol/gco:CharacterString = 'OGC:WMS' and gmd:CI_OnlineResource/gmd:linkage/che:PT_FreeURL/che:URLGroup/che:LocalisedURL[@locale='#FR'] = $resourceURL]">
+                                                                    <xsl:variable name="layerDescription" select="gmd:CI_OnlineResource/gmd:description/gmd:PT_FreeText/gmd:textGroup/gmd:LocalisedCharacterString[@locale='#FR']"/>
+                                                                    <xsl:if test="position() > 1"><br/></xsl:if>
+                                                                    <a href="{$resourceURL}" target="_blank">
+                                                                        <xsl:choose>
+                                                                            <xsl:when test="$layerDescription != ''">
+                                                                                <xsl:value-of select="$layerDescription"/>
+                                                                            </xsl:when>
+                                                                            <xsl:otherwise>Couche <xsl:value-of select="position()"/></xsl:otherwise>
+                                                                        </xsl:choose>
+                                                                    </a>
+                                                                </xsl:for-each>
+                                                            </td>
+                                                        </tr>
+                                                    </xsl:if>
+                                                </xsl:when>
+
+                                                <!-- Open Data Valais -->
+                                                <xsl:when test="$resourceProtocol = 'WWW:DOWNLOAD-APP' and $resourceName = 'OpenData Valais'">
+                                                    <tr>
+                                                        <td class="label">Service de téléchargement OpenData Valais</td>
+                                                        <td>
+                                                            <a href="{$resourceURL}" target="_blank">Lien</a>
+                                                        </td>
+                                                    </tr>
+                                                </xsl:when>
+
+                                                <!-- geodienste.ch -->
+                                               <xsl:when test="contains($resourceName,'geodienste.ch')">
+                                                    <tr>
+                                                        <td class="label">Lien de téléchargement geodienste.ch</td>
+                                                        <td>
+                                                            <a href="{$resourceURL}" target="_blank">
+                                                                <xsl:choose>
+                                                                    <xsl:when test="$resourceDescription != ''">
+                                                                        <xsl:value-of select="$resourceDescription"/>
+                                                                    </xsl:when>
+                                                                    <xsl:when test="$resourceName != ''">
+                                                                        <xsl:value-of select="$resourceName"/>
+                                                                    </xsl:when>
+                                                                    <xsl:otherwise>
+                                                                        <xsl:value-of select="$resourceURL"/>
+                                                                    </xsl:otherwise>
+                                                                </xsl:choose>
+                                                            </a>
+                                                        </td>
+                                                    </tr>
+                                                </xsl:when>
+
+                                                <!-- Géoportail du Canton du Valais -->
+                                                <xsl:when test="$resourceProtocol = 'CHTOPO:specialised-geoportal'">
+                                                    <tr>
+                                                        <td class="label">Géoportail du Canton du Valais</td>
+                                                        <td>
+                                                            <a href="{$resourceURL}" target="_blank">Lien</a>
+                                                        </td>
+                                                    </tr>	
+                                                </xsl:when>
+
+                                            </xsl:choose>
+                                        </xsl:for-each>
+
+                                    <!-- Ressource interne -->
+                                    <xsl:if test="$internalResource != ''">
+                                        <tr>
+                                            <td class="label">Ressource interne</td>
+                                            <td><xsl:value-of select="$internalResource"/></td>
+                                        </tr>
+                                    </xsl:if>
+
+                                    <!-- Identifiant interne -->
+                                    <xsl:if test="$internalResourceID != ''">
+                                        <tr>
+                                            <td class="label">Identifiant interne</td>
+                                            <td><xsl:value-of select="$internalResourceID"/></td>
+                                        </tr>
+                                    </xsl:if>
+
+                                    <!-- Distributeur   -->
+                                    <tr>
+                                        <td class="label">Distributeur</td>
+                                        <td>
+                                            <xsl:if test="$distributorOrgName != ''">
+                                                <xsl:call-template name="formatHierarchicalOrganization">
+                                                    <xsl:with-param name="orgText" select="$distributorOrgName"/>
+                                                </xsl:call-template>
+                                                <br/>
+                                            </xsl:if>
+                                                                                        
+                                            <!-- Adresse -->
+                                            <xsl:variable name="streetName" select="$distributorOrgAddress/che:streetName/gco:CharacterString"/>
+                                            <xsl:variable name="streetNumber" select="$distributorOrgAddress/che:streetNumber/gco:CharacterString"/>
+                                            <xsl:if test="$streetName != '' or $streetNumber != ''">
+                                                <xsl:value-of select="$streetName"/>
+                                                <xsl:if test="$streetNumber != ''">
+                                                    <xsl:text> </xsl:text><xsl:value-of select="$streetNumber"/>
+                                                </xsl:if>
+                                                <br/>
+                                                
+                                                <xsl:variable name="postalCode" select="$distributorOrgAddress/gmd:postalCode/gco:CharacterString"/>
+                                                <xsl:variable name="city" select="$distributorOrgAddress/gmd:city/gco:CharacterString"/>
+                                                <xsl:if test="$postalCode != '' or $city != ''">
+                                                    <xsl:value-of select="$postalCode"/>
+                                                    <xsl:if test="$city != ''">
+                                                        <xsl:text> </xsl:text><xsl:value-of select="$city"/>
+                                                    </xsl:if>
+                                                    <br/>
+                                                </xsl:if>
+                                            </xsl:if>
+                                            
+                                            <!-- Contact -->
+                                            <xsl:variable name="phone" select="$distributorOrgContact/gmd:contactInfo/gmd:CI_Contact/gmd:phone/che:CHE_CI_Telephone/gmd:voice/gco:CharacterString"/>
+                                            <xsl:if test="$phone != ''">
+                                                <div>Tél: <a href="tel:{$phone}"><xsl:value-of select="$phone"/></a></div>
+                                            </xsl:if>
+                                            
+                                            <xsl:variable name="email" select="$distributorOrgAddress/gmd:electronicMailAddress/gco:CharacterString"/>
+                                            <xsl:if test="$email != ''">
+                                                <div>Email: <a href="mailto:{$email}"><xsl:value-of select="$email"/></a></div>
+                                            </xsl:if>
+                                            
+                                            <xsl:variable name="website" select="$distributorOrgContact/gmd:contactInfo/gmd:CI_Contact/gmd:onlineResource/gmd:CI_OnlineResource/gmd:linkage/che:PT_FreeURL/che:URLGroup/che:LocalisedURL[@locale='#FR']"/>
+                                            <xsl:if test="$website != ''">
+                                                <div>Site web: <a href="{$website}" target="_blank"><xsl:value-of select="$website"/></a></div>
+                                            </xsl:if>
+                                        </td>
+                                    </tr>
+
+                                    <!-- Format de la ressource -->
+                                    <xsl:if test="$resourceFormats">
+                                        <tr>
+                                            <td class="label">Format<xsl:if test="count($resourceFormats) > 1">s</xsl:if> de la ressource</td>
+                                            <td>
+                                                <xsl:for-each select="$resourceFormats">
+                                                    <xsl:variable name="formatName" select="gmd:name/gco:CharacterString"/>
+                                                    <xsl:variable name="formatVersion" select="gmd:version/gco:CharacterString"/>
+                                                    
+                                                    <xsl:if test="$formatName != ''">
+                                                        <xsl:value-of select="$formatName"/>
+                                                        <xsl:if test="$formatVersion != ''">
+                                                            <xsl:text> (version </xsl:text><xsl:value-of select="$formatVersion"/><xsl:text>)</xsl:text>
+                                                        </xsl:if>
+                                                        <xsl:if test="position() != last()"><br/></xsl:if>
+                                                    </xsl:if>
+                                                </xsl:for-each>
+                                            </td>
+                                        </tr>
+                                    </xsl:if>
+
+                                    </tbody>
+                                </table>
+                            </xsl:if>
                         </section>
+
                         <!-- Métadonnées -->
                         <section>
                             <h2 class="section-title">Métadonnées</h2>
@@ -780,6 +1171,7 @@
                                 </tbody>
                             </table>
                         </section>
+
                     </article>
                 </main>
             </body>
