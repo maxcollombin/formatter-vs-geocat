@@ -270,6 +270,7 @@
                         </xsl:if>
 
                         <section>
+                            <h2 class="section-title">Aktualisierungsinformationen</h2>
                             <table class="info-table">
                                 <tbody>
                                     <xsl:if test="$statusCode != ''">
