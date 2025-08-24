@@ -503,7 +503,7 @@
                             <img src="https://www.vs.ch/documents/17311/472429/logo_geocat" alt="Logo geocat"/>
                         </a>
                     </div>
-                    <div class="banner">Catalogue métadonnées - Simple</div>
+                    <div class="banner">Catalogue métadonnées - Complet</div>
                 </header>
 
                 <main>
