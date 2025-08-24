@@ -313,7 +313,7 @@
                                                 <strong><xsl:value-of select="$orgName"/></strong><br/>
                                             </xsl:if>
                                             <xsl:if test="$orgAcronym != ''">
-                                                <xsl:value-of select="$orgAcronym"/><br/><br/>
+                                                <xsl:value-of select="$orgAcronym"/><br/>
                                             </xsl:if>
                                             
                                             <!-- Adresse -->
