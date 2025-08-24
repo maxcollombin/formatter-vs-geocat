@@ -57,6 +57,7 @@
             <xsl:when test="$topicCode = 'location'">B Localisation, systèmes de référence</xsl:when>
             <xsl:when test="$topicCode = 'elevation'">C Altimétrie</xsl:when>
             <xsl:when test="$topicCode = 'boundaries'">D Limites politiques et administratives</xsl:when>
+            <xsl:when test="$topicCode = 'planningCadastre'">E Développement territorial, cadastre foncier</xsl:when>
             <xsl:when test="$topicCode = 'planningCadastre_Planning'">E1 Développement territorial</xsl:when>
             <xsl:when test="$topicCode = 'planningCadastre_Cadastre'">E2 Cadastre foncier</xsl:when>
             <xsl:when test="$topicCode = 'geoscientificInformation'">F Géologie, sols, dangers naturels</xsl:when>
@@ -600,7 +601,7 @@
                                     <!-- Géodonnée de base -->
                                     <xsl:if test="$basicGeodataID != ''">
                                         <tr>
-                                            <td class="label"> Géodonnée de base (fédéral)</td>
+                                            <td class="label">Géodonnée de base (fédéral)</td>
                                             <td>
                                                 <xsl:value-of select="$basicGeodataID"/>
                                             </td>

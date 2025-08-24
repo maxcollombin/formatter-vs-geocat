@@ -19,7 +19,7 @@
             <xsl:when test="$statusCode = 'onGoing'">Kontinuierliche Aktualisierung</xsl:when>
             <xsl:when test="$statusCode = 'completed'">Abgeschlossen</xsl:when>
             <xsl:when test="$statusCode = 'underDevelopment'">In Erstellung</xsl:when>
-            <xsl:when test="$statusCode = 'planned'">Planifié</xsl:when>
+            <xsl:when test="$statusCode = 'planned'">Geplant</xsl:when>
             <xsl:when test="$statusCode = 'required'">Erforderlich</xsl:when>
             <xsl:when test="$statusCode = 'obsolete'">Veraltet</xsl:when>
             <xsl:when test="$statusCode = 'historicalArchive'">Historisches Archiv</xsl:when>
