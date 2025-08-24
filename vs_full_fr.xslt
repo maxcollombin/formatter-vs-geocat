@@ -630,7 +630,7 @@
                                                 <strong><xsl:value-of select="$custodianOrgName"/></strong><br/>
                                             </xsl:if>
                                             <xsl:if test="$custodianOrgAcronym != ''">
-                                                <xsl:value-of select="$custodianOrgAcronym"/><br/><br/>
+                                                <xsl:value-of select="$custodianOrgAcronym"/><br/>
                                             </xsl:if>
                                             
                                             <!-- Adresse -->
