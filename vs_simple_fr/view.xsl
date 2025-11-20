@@ -129,8 +129,14 @@
                     
                     /* Tableaux */
                     table { border-collapse:collapse !important; width:100% !important; margin-bottom:12pt; page-break-inside:avoid; background:#fff !important; border:1pt solid #ddd !important; }
-                    th { white-space:nowrap; background:#f8f9fa !important; color:#000 !important; font-weight:600; width:50%; padding:6pt 8pt !important; border:1pt solid #ddd !important; vertical-align:top; }
+                    th { white-space:nowrap; background:#fff !important; color:#000 !important; font-weight:600; width:50%; padding:6pt 8pt !important; border:1pt solid #ddd !important; vertical-align:top; }
                     td { background:#fff !important; color:#000 !important; width:50%; padding:6pt 8pt !important; border:1pt solid #ddd !important; vertical-align:top; word-wrap:break-word; }
+                    
+                    /* Alternance Bootstrap - lignes complètes grisées */
+                    tr:nth-child(odd) th,
+                    tr:nth-child(odd) td { 
+                        background:#f8f9fa !important; 
+                    }
                     
                     /* Images */
                     img { max-width:100% !important; height:auto !important; display:block !important; margin:12pt auto !important; border:1pt solid #ddd; page-break-inside:avoid; }
@@ -141,6 +147,31 @@
                     
                     /* Suppression des bordures parasites */
                     .row, .col-12, .col-md-4 { border:none !important; margin:0 !important; padding:0 !important; }
+                    
+                    /* Suppression des bordures Bootstrap et résiduelles */
+                    [class*="col-"], .row, .container, .card, .card-body, .card-header {
+                        border: none !important;
+                        box-shadow: none !important;
+                    }
+                    
+                    /* Supprimer lignes résiduelles - garder bordures verticales */
+                    table, tr, td, th {
+                        border-top: 1pt solid #ddd !important;
+                        border-bottom: 1pt solid #ddd !important;
+                        border-left: none !important;
+                        border-right: none !important;
+                    }
+                    
+                    /* Bordures verticales uniquement entre colonnes et sur les côtés */
+                    th {
+                        border-right: 1pt solid #ddd !important;
+                    }
+                    
+                    /* Bordure extérieure du tableau */
+                    table {
+                        border-left: 1pt solid #ddd !important;
+                        border-right: 1pt solid #ddd !important;
+                    }
                 }
                 </style>
             </head>
