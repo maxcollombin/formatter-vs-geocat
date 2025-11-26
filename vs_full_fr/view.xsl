@@ -28,40 +28,31 @@
     <!-- Formattage des contacts -->
     <xsl:template name="formatContact">
         <xsl:param name="contact"/>
-        <xsl:variable name="address" select="$contact/gmd:contactInfo/gmd:CI_Contact/gmd:address/che:CHE_CI_Address"/>
+        <xsl:variable name="ci" select="$contact/gmd:contactInfo/gmd:CI_Contact"/>
+        <xsl:variable name="address" select="$ci/gmd:address/che:CHE_CI_Address"/>
         <xsl:variable name="streetName" select="$address/che:streetName/gco:CharacterString"/>
         <xsl:variable name="streetNumber" select="$address/che:streetNumber/gco:CharacterString"/>
         <xsl:variable name="postalCode" select="$address/gmd:postalCode/gco:CharacterString"/>
         <xsl:variable name="city" select="$address/gmd:city/gco:CharacterString"/>
-        <xsl:variable name="phone" select="$contact/gmd:contactInfo/gmd:CI_Contact/gmd:phone/che:CHE_CI_Telephone/gmd:voice/gco:CharacterString"/>
+        <xsl:variable name="phone" select="$ci/gmd:phone/che:CHE_CI_Telephone/gmd:voice/gco:CharacterString"/>
         <xsl:variable name="email" select="$address/gmd:electronicMailAddress/gco:CharacterString"/>
-        <xsl:variable name="website" select="$contact/gmd:contactInfo/gmd:CI_Contact/gmd:onlineResource/gmd:CI_OnlineResource/gmd:linkage/che:PT_FreeURL/che:URLGroup/che:LocalisedURL[@locale='#FR']"/>
-        <!-- Adresse -->
-        <xsl:if test="$streetName != '' or $streetNumber != ''">
-            <div>
-                <xsl:value-of select="$streetName"/>
-                <xsl:if test="$streetNumber != ''"><xsl:text> </xsl:text><xsl:value-of select="$streetNumber"/></xsl:if>
+        <xsl:variable name="website" select="$ci/gmd:onlineResource/gmd:CI_OnlineResource/gmd:linkage/che:PT_FreeURL/che:URLGroup/che:LocalisedURL[@locale='#FR']"/>
+        <!-- Rue et numéro -->
+        <xsl:if test="$streetName or $streetNumber">
+            <div><xsl:value-of select="$streetName"/>
+                <xsl:if test="$streetNumber"><xsl:text> </xsl:text><xsl:value-of select="$streetNumber"/></xsl:if>
             </div>
         </xsl:if>
         <!-- Code postal et ville -->
-        <xsl:if test="$postalCode != '' or $city != ''">
-            <div>
-                <xsl:value-of select="$postalCode"/>
-                <xsl:if test="$city != ''"><xsl:text> </xsl:text><xsl:value-of select="$city"/></xsl:if>
+        <xsl:if test="$postalCode or $city">
+            <div><xsl:value-of select="$postalCode"/>
+                <xsl:if test="$city"><xsl:text> </xsl:text><xsl:value-of select="$city"/></xsl:if>
             </div>
         </xsl:if>
-        <!-- Téléphone -->
-        <xsl:if test="$phone != ''">
-            <div>Tél: <a href="tel:{$phone}"><xsl:value-of select="$phone"/></a></div>
-        </xsl:if>
-        <!-- Email -->
-        <xsl:if test="$email != ''">
-            <div>Email: <a href="mailto:{$email}"><xsl:value-of select="$email"/></a></div>
-        </xsl:if>
-        <!-- Site web -->
-        <xsl:if test="$website != ''">
-            <div>Site web: <a href="{$website}" target="_blank"><xsl:value-of select="$website"/></a></div>
-        </xsl:if>
+        <!-- Téléphone, mail, site web -->
+        <xsl:if test="$phone"><div>Tél: <a href="tel:{$phone}"><xsl:value-of select="$phone"/></a></div></xsl:if>
+        <xsl:if test="$email"><div>Email: <a href="mailto:{$email}"><xsl:value-of select="$email"/></a></div></xsl:if>
+        <xsl:if test="$website"><div>Site web: <a href="{$website}" target="_blank"><xsl:value-of select="$website"/></a></div></xsl:if>
     </xsl:template>
     <!-- Formattage du texte pour les bases légales -->
     <xsl:template name="formatLegislationText">
@@ -71,7 +62,7 @@
                 <xsl:variable name="beforeFirst" select="substring-before($text, '*')"/>
                 <xsl:variable name="afterFirst" select="substring-after($text, '*')"/>
                 
-                <xsl:if test="normalize-space($beforeFirst) != ''">
+                <xsl:if test="normalize-space($beforeFirst)">
                     <xsl:value-of select="normalize-space($beforeFirst)"/><br/>
                 </xsl:if>
                 
@@ -91,7 +82,7 @@
                 <xsl:variable name="currentPart" select="substring-before($text, '*')"/>
                 <xsl:variable name="remaining" select="substring-after($text, '*')"/>
                 
-                <xsl:if test="normalize-space($currentPart) != ''">
+                <xsl:if test="normalize-space($currentPart)">
                     <xsl:value-of select="normalize-space($currentPart)"/><br/>
                 </xsl:if>
                 
@@ -100,7 +91,7 @@
                 </xsl:call-template>
             </xsl:when>
             <xsl:otherwise>
-                <xsl:if test="normalize-space($text) != ''">
+                <xsl:if test="normalize-space($text)">
                     <xsl:value-of select="normalize-space($text)"/>
                 </xsl:if>
             </xsl:otherwise>
@@ -167,7 +158,7 @@
             </xsl:call-template>
         </xsl:variable>
         <xsl:choose>
-            <xsl:when test="normalize-space($codelistLabel) != ''">
+            <xsl:when test="normalize-space($codelistLabel)">
                 <xsl:value-of select="$codelistLabel"/>
             </xsl:when>
             <xsl:otherwise>
@@ -181,7 +172,7 @@
         
         <!-- Résolution échelle (vecteur/tabulaire) -->
         <xsl:variable name="denominator" select=".//gmd:spatialResolution/gmd:MD_Resolution/gmd:equivalentScale/gmd:MD_RepresentativeFraction/gmd:denominator/gco:Integer"/>
-        <xsl:if test="$denominator != '' and ($spatialTypes[. = 'vector'] or $spatialTypes[. = 'textTable'])">
+        <xsl:if test="$denominator and ($spatialTypes[. = 'vector'] or $spatialTypes[. = 'textTable'])">
             <tr>
                 <th scope="row">Dénominateur d'échelle</th>
                 <td>1:<xsl:value-of select="format-number($denominator, '#,###')"/></td>
@@ -190,12 +181,12 @@
         <!-- Résolution distance (raster/TIN) -->
         <xsl:variable name="distance" select=".//gmd:spatialResolution/gmd:MD_Resolution/gmd:distance/gco:Distance"/>
         <xsl:variable name="uom" select=".//gmd:spatialResolution/gmd:MD_Resolution/gmd:distance/gco:Distance/@uom"/>
-        <xsl:if test="$distance != '' and ($spatialTypes[. = 'grid'] or $spatialTypes[. = 'tin'])">
+        <xsl:if test="$distance and ($spatialTypes[. = 'grid'] or $spatialTypes[. = 'tin'])">
             <tr>
                 <th scope="row">Résolution</th>
                 <td>
                     <xsl:value-of select="$distance"/>
-                    <xsl:if test="$uom != ''">
+                    <xsl:if test="$uom">
                         <xsl:text> </xsl:text>
                         <xsl:call-template name="formatUnitOfMeasure">
                             <xsl:with-param name="uom" select="$uom"/>
@@ -272,61 +263,45 @@
                 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet"/>
                 <!-- Style VS -->
                 <style type="text/css">
-                :root { --bs-primary: #D52826; --vs-font-family: "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; }
-                /* === Ecran === */
-                body { font-family: var(--vs-font-family); font-size: 1rem; line-height: 1.5; }
-                h1 { font-size: 2.5rem; line-height: 1.2; }
-                h2 { font-size: 1.7rem; }
-                h3 { font-size: 1.2rem; }
-                p { margin: 1rem 0; }
-                a { color: var(--bs-primary); text-decoration: none; }
-                a:hover, a:active { color: #b3180d; text-decoration: underline; }
-                .btn-custom { background-color: var(--bs-primary); color: #fff; border: none; }
-                .btn-custom:hover { background-color: #b3180d; }
-                /* Tableaux avec colonnes 50/50 */
-                .table-50-50 { table-layout: fixed; }
-                .table-50-50 th { width: 50%; }
-                .table-50-50 td { width: 50%; }
-                /* === Impression === */
-                @media print {
-                    /* Reset général pour l'impression */
-                    * { -webkit-print-color-adjust:exact !important; color-adjust:exact !important; }
-                    body, h1, h2, h3, p, table, th, td, img { color:#000 !important; background:#fff !important; }
-                    a, a:visited { color:#D52826 !important; text-decoration:underline !important; }
-                    .d-print-none, .btn { display:none !important; }
-                    
-                    /* Typographie */
-                    body { font-size:11pt; line-height:1.4; margin:0; padding:0; }
-                    h3 { font-size:12pt; font-weight:bold; margin-top:16pt; margin-bottom:8pt; page-break-after:avoid; }
-                    
-                    /* Header */
-                    header h2 { background:#D52826 !important; color:#fff !important; border:none; padding:12pt 8pt; text-align:center; margin-bottom:24pt; font-size:18pt; font-weight:bold; border-radius:4pt; page-break-after:avoid; }
-                    
-                    /* Conteneurs */
-                    .container { max-width:100% !important; margin:0 !important; padding:0 !important; }
-                    .card { border:1pt solid #000 !important; box-shadow:none !important; margin-bottom:12pt; margin-top:16pt; page-break-inside:avoid; background:#fff !important; }
-                    .card-header { background:#fff !important; color:#000 !important; border:none !important; border-bottom:1pt solid #ddd !important; font-weight:600; text-align:center; page-break-after:avoid; padding:12pt 8pt; }
-                    .card-body { padding:16pt 12pt 12pt 12pt !important; background:#fff !important; }
-                    
-                    /* Sections avec gestion des sauts de page */
-                    .table-responsive { overflow:visible !important; page-break-inside:avoid; margin-bottom:16pt; background:#fff !important; border:none !important; }
-                    h3 + .table-responsive, h3 + div { page-break-before:avoid; }
-                    
-                    /* Tableaux */
-                    table { border-collapse:collapse !important; width:100% !important; margin-bottom:12pt; page-break-inside:avoid; background:#fff !important; border:1pt solid #ddd !important; }
-                    th { white-space:nowrap; background:#f8f9fa !important; color:#000 !important; font-weight:600; width:50%; padding:6pt 8pt !important; border:1pt solid #ddd !important; vertical-align:top; }
-                    td { background:#fff !important; color:#000 !important; width:50%; padding:6pt 8pt !important; border:1pt solid #ddd !important; vertical-align:top; word-wrap:break-word; }
-                    
-                    /* Images */
-                    img { max-width:100% !important; height:auto !important; display:block !important; margin:12pt auto !important; border:1pt solid #ddd; page-break-inside:avoid; }
-                    
-                    /* Contrôles de pagination */
-                    p, td, th { orphans:3; widows:3; }
-                    .page-break { page-break-before:always; }
-                    
-                    /* Suppression des bordures parasites */
-                    .row, .col-12, .col-md-4 { border:none !important; margin:0 !important; padding:0 !important; }
-                }
+                    /* Variables globales */
+                    :root { --bs-primary: #D52826; --vs-font-family: "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; }                    
+                    /* Ecran */
+                    body { font-family: var(--vs-font-family); font-size:1rem; line-height:1.5; margin:0; padding:0; }
+                    h1 { font-size:2.5rem; line-height:1.2; } 
+                    h2 { font-size:1.7rem; } 
+                    h3 { font-size:1.2rem; } 
+                    p { margin:1rem 0; }
+                    a { color:var(--bs-primary); text-decoration:none; } 
+                    a:hover, a:active { color:#b3180d; text-decoration:underline; }
+                    .table-50-50 { table-layout:fixed; } 
+                    .table-50-50 th, .table-50-50 td { width:50%; }
+                    /* Vignettes */
+                    .thumbnail-wrapper { text-align: center; margin-bottom: 1rem; }
+                    .thumbnail-wrapper img { max-width: 100%; height: auto; border: 1px solid #ddd; border-radius: 4px; }
+                    /* Impression */
+                    @media print {
+                        * { -webkit-print-color-adjust:exact!important; color-adjust:exact!important; }
+                        body, h1, h3, p, table, th, td { color:#000!important; background:#fff!important; }
+                        a, a:visited { color:#D52826!important; text-decoration:underline!important; }
+                        .d-print-none, .btn { display:none!important; }
+                        body { font-size:11pt; line-height:1.4; }
+                        h3 { font-size:12pt; font-weight:bold; margin-top:16pt; margin-bottom:8pt; page-break-after:avoid; }
+                        header h2 { background:#D52826; color:#fff; border:none; padding:12pt 8pt; text-align:center; margin-bottom:24pt; font-size:18pt; font-weight:bold; border-radius:4pt; page-break-after:avoid; }
+                        .container { max-width:100%!important; margin:0!important; padding:0!important; }
+                        .card { border:1pt solid #000!important; box-shadow:none!important; margin:16pt 0 12pt 0!important; page-break-inside:avoid; background:#fff!important; }
+                        .card-header { background:#fff; color:#000; border:none; border-bottom:1pt solid #ddd!important; font-weight:600; text-align:center; page-break-after:avoid; padding:12pt 8pt; }
+                        .card-body { padding:16pt 12pt 12pt 12pt!important; background:#fff!important; }
+                        .table-responsive { overflow:visible!important; page-break-inside:avoid; margin-bottom:16pt; background:#fff!important; border:none!important; }
+                        table { border-collapse:collapse!important; width:100%!important; margin-bottom:12pt; page-break-inside:avoid; background:#fff!important; border:1pt solid #ddd!important; }
+                        th { white-space:nowrap; background:#fff!important; color:#000!important; font-weight:600; padding:6pt 8pt!important; vertical-align:top; border-right:1pt solid #ddd!important; }
+                        td { background:#fff!important; color:#000!important; padding:6pt 8pt!important; vertical-align:top; word-wrap:break-word; border:none!important; }
+                        tr:nth-child(odd) th, tr:nth-child(odd) td { background:#f8f9fa!important; }
+                        .thumbnail-wrapper { text-align: center !important; margin-bottom: 12pt !important; }
+                        .thumbnail-wrapper img { display: inline-block !important; max-width: 95% !important; height: auto !important; border: 1pt solid #ddd !important; page-break-inside: avoid !important; border-radius: 0 !important; }
+                        p, td, th { orphans:3; widows:3; }
+                        .page-break { page-break-before:always; }
+                        [class*="col-"], .row, .container, .card, .card-body, .card-header, .col-12, .col-md-4 { border:none!important; box-shadow:none!important; }
+                    }
                 </style>
             </head>
             <body class="bg-white">
@@ -357,20 +332,20 @@
                 <!-- Contenu principal -->
                 <main class="container">
                     <article class="card mb-4">
-                        <xsl:if test="$citationTitle != ''">
-                            <h2 class="card-header text-center bg-white">
-                                <xsl:value-of select="$citationTitle"/>
-                            </h2>
+                        <xsl:if test="$citationTitle">
+                            <h2 class="card-header text-center bg-white"><xsl:value-of select="$citationTitle"/></h2>
                         </xsl:if>
                         <div class="card-body">
-                            <xsl:if test="$thumbnail != ''">
-                                <img src="{$thumbnail}" alt="Aperçu de {$citationTitle}" class="img-fluid mx-auto d-block mb-3"/>
+                            <xsl:if test="$thumbnail">
+                                <div class="thumbnail-wrapper">
+                                    <img src="{$thumbnail}" alt="Aperçu de {$citationTitle}"/>
+                                </div>
                             </xsl:if>
-                            <xsl:if test="$abstract != ''">
+                            <xsl:if test="$abstract">
                                 <h3>Résumé de la ressource</h3>
                                 <p><xsl:value-of select="$abstract"/></p>
                             </xsl:if>
-                            <xsl:if test="$purpose != ''">
+                            <xsl:if test="$purpose">
                                 <h3>But</h3>
                                 <p><xsl:value-of select="$purpose"/></p>
                             </xsl:if>
@@ -378,22 +353,10 @@
                             <div class="table-responsive">
                                 <table class="table table-bordered table-sm table-striped table-hover align-middle table-50-50">
                                     <tbody>
-                                        <xsl:if test="$statusCode != ''">
-                                            <tr>
-                                                <th scope="row">État</th>
-                                                <td>
-                                                    <xsl:call-template name="codelist">
-                                                        <xsl:with-param name="code" select="$statusCode"/>
-                                                        <xsl:with-param name="path">gmd:MD_ProgressCode</xsl:with-param>
-                                                    </xsl:call-template>
-                                                </td>
-                                            </tr>
+                                        <xsl:if test="$statusCode">
+                                            <tr><th scope="row">État</th><td><xsl:call-template name="codelist"><xsl:with-param name="code" select="$statusCode"/><xsl:with-param name="path">gmd:MD_ProgressCode</xsl:with-param></xsl:call-template></td></tr>
                                         </xsl:if>
-                                        <!-- Langue -->
-                                        <tr>
-                                            <th scope="row">Langue</th>
-                                        </tr>
-                                        <xsl:if test="$creationDate != ''">
+                                        <xsl:if test="$creationDate">
                                             <tr>
                                                 <th scope="row">Date de création</th>
                                                 <td>
@@ -403,7 +366,7 @@
                                                 </td>
                                             </tr>
                                         </xsl:if>
-                                        <xsl:if test="$revisionDate != ''">
+                                        <xsl:if test="$revisionDate">
                                             <tr>
                                                 <th scope="row">Date de révision</th>
                                                 <td>
@@ -413,7 +376,7 @@
                                                 </td>
                                             </tr>
                                         </xsl:if>
-                                        <xsl:if test="$basicGeodataID != ''">
+                                        <xsl:if test="$basicGeodataID">
                                             <tr>
                                                 <th scope="row">Géodonnée de base (fédéral)</th>
                                                 <td><xsl:value-of select="$basicGeodataID"/></td>
@@ -425,7 +388,7 @@
                                     <div class="table-responsive">
                                         <table class="table table-bordered table-sm table-striped table-hover align-middle table-50-50">
                                             <tbody>
-                                                <xsl:if test="$dataSetURI != ''">
+                                                <xsl:if test="$dataSetURI">
                                                     <tr>
                                                         <th scope="row">Désignation de la donnée (URI)</th>
                                                         <td><a href="{$dataSetURI}" target="_blank">Lien</a></td>
@@ -434,8 +397,8 @@
                                                 <tr>
                                                     <th scope="row">Gestionnaire</th>
                                                     <td>
-                                                        <xsl:if test="$custodianOrgName != ''"><xsl:value-of select="$custodianOrgName"/><br/></xsl:if>
-                                                        <xsl:if test="$custodianOrgAcronym != ''"><xsl:value-of select="$custodianOrgAcronym"/><br/></xsl:if>
+                                                        <xsl:if test="$custodianOrgName"><xsl:value-of select="$custodianOrgName"/><br/></xsl:if>
+                                                        <xsl:if test="$custodianOrgAcronym"><xsl:value-of select="$custodianOrgAcronym"/><br/></xsl:if>
                                                         <xsl:call-template name="formatContact">
                                                             <xsl:with-param name="contact" select="$custodianOrgContact"/>
                                                         </xsl:call-template>
@@ -454,7 +417,7 @@
                                                     <th scope="row">Mots-clés</th>
                                                     <td>
                                                         <xsl:for-each select="$keywords">
-                                                            <xsl:if test="normalize-space(.) != ''">
+                                                            <xsl:if test="normalize-space(.)">
                                                                 <xsl:value-of select="."/>
                                                                 <xsl:if test="position() != last()"><br/></xsl:if>
                                                             </xsl:if>
@@ -486,7 +449,7 @@
                                                                     <xsl:with-param name="objectType" select="$objectType"/>
                                                                 </xsl:call-template>
                                                                 
-                                                                <xsl:if test="$objectCount != ''">
+                                                                <xsl:if test="$objectCount">
                                                                     <xsl:text> (</xsl:text><xsl:value-of select="$objectCount"/><xsl:text>)</xsl:text>
                                                                 </xsl:if>
                                                                 
@@ -501,12 +464,12 @@
                                                 </xsl:call-template>
 
                                                 <!-- Système de référence -->
-                                                <xsl:if test="$referenceSystem != ''">
+                                                <xsl:if test="$referenceSystem">
                                                     <tr>
                                                         <th scope="row">Système de référence</th>
                                                         <td>
                                                             <xsl:value-of select="$referenceSystem"/>
-                                                            <xsl:if test="$referenceSystemCodeSpace != ''">
+                                                            <xsl:if test="$referenceSystemCodeSpace">
                                                                 <xsl:text> (</xsl:text><xsl:value-of select="$referenceSystemCodeSpace"/><xsl:text>)</xsl:text>
                                                             </xsl:if>
                                                         </td>
@@ -515,51 +478,52 @@
                                             </tbody>
                                         </table>
                                     </div>
+                                <xsl:if test="$lineage or $source">
                                 <h3 class="section-title">Informations sur la qualité des données</h3>
-                                <div class="table-responsive">
-                                    <table class="table table-bordered table-sm table-striped table-hover align-middle table-50-50">
-                                        <tbody>
-                                            <xsl:if test="$lineage != ''">
-                                                <tr>
-                                                    <th scope="row">Généalogie, provenance</th>
-                                                    <td><xsl:value-of select="$lineage"/></td>
-                                                </tr>
-                                            </xsl:if>
-                                            <xsl:if test="$source != ''">
-                                                <tr>
-                                                    <th scope="row">Source</th>
-                                                    <td><xsl:value-of select="$source"/></td>
-                                                </tr>
-                                            </xsl:if>
-                                        </tbody>
-                                    </table>
-                                </div>
-                                <!-- Contraintes sur la ressource  -->
-                                <h3 class="mt-4">Contraintes sur la ressource</h3>
-                                <xsl:if test="$useLimitation != '' or $otherConstraints">
                                     <div class="table-responsive">
                                         <table class="table table-bordered table-sm table-striped table-hover align-middle table-50-50">
                                             <tbody>
-                                                <xsl:if test="$useLimitation != ''">
+                                                <xsl:if test="$lineage">
                                                     <tr>
-                                                        <th scope="row">Limitation d'utilisation</th>
-                                                        <td><xsl:value-of select="$useLimitation"/></td>
+                                                        <th scope="row">Généalogie, provenance</th>
+                                                        <td><xsl:value-of select="$lineage"/></td>
                                                     </tr>
                                                 </xsl:if>
-                                                <xsl:if test="$otherConstraints">
+                                                <xsl:if test="$source">
                                                     <tr>
-                                                        <th scope="row">Autres contraintes</th>
-                                                        <td>
-                                                            <xsl:for-each select="$otherConstraints">
-                                                                <xsl:value-of select="."/>
-                                                                <xsl:if test="position() != last()"><br/></xsl:if>
-                                                            </xsl:for-each>
-                                                        </td>
+                                                        <th scope="row">Source</th>
+                                                        <td><xsl:value-of select="$source"/></td>
                                                     </tr>
                                                 </xsl:if>
                                             </tbody>
                                         </table>
                                     </div>
+                                </xsl:if>
+                                <xsl:if test="$useLimitation or $otherConstraints">
+                                    <h3 class="mt-4">Contraintes sur la ressource</h3>
+                                        <div class="table-responsive">
+                                            <table class="table table-bordered table-sm table-striped table-hover align-middle table-50-50">
+                                                <tbody>
+                                                    <xsl:if test="$useLimitation">
+                                                        <tr>
+                                                            <th scope="row">Limitation d'utilisation</th>
+                                                            <td><xsl:value-of select="$useLimitation"/></td>
+                                                        </tr>
+                                                    </xsl:if>
+                                                    <xsl:if test="$otherConstraints">
+                                                        <tr>
+                                                            <th scope="row">Autres contraintes</th>
+                                                            <td>
+                                                                <xsl:for-each select="$otherConstraints">
+                                                                    <xsl:value-of select="."/>
+                                                                    <xsl:if test="position() != last()"><br/></xsl:if>
+                                                                </xsl:for-each>
+                                                            </td>
+                                                        </tr>
+                                                    </xsl:if>
+                                                </tbody>
+                                            </table>
+                                        </div>
                                 </xsl:if>
                                 <xsl:if test="$legislationTitle">
                                     <h3 class="mt-4">Référence(s) légale(s)</h3>
@@ -586,8 +550,8 @@
                                 <div class="table-responsive">
                                     <table class="table table-bordered table-sm table-striped table-hover align-middle table-50-50">
                                         <tbody>
-                                            <xsl:if test="$maintenanceFrequency != '' or $maintenanceNote != ''">
-                                                <xsl:if test="$maintenanceFrequency != ''">
+                                            <xsl:if test="$maintenanceFrequency or $maintenanceNote">
+                                                <xsl:if test="$maintenanceFrequency">
                                                     <tr>
                                                         <th scope="row">Fréquence de mise à jour</th>
                                                         <td>
@@ -598,7 +562,7 @@
                                                         </td>
                                                     </tr>
                                                 </xsl:if>
-                                                <xsl:if test="$maintenanceNote != ''">
+                                                <xsl:if test="$maintenanceNote">
                                                     <tr>
                                                         <th scope="row">Remarque sur la mise à jour</th>
                                                         <td><xsl:value-of select="$maintenanceNote"/></td>
@@ -608,61 +572,61 @@
                                         </tbody>
                                     </table>
                                 </div>
-                                <h3 class="mt-4">Catalogue d'objets et modèle</h3>
-                                <div class="table-responsive">
-                                    <table class="table table-bordered table-sm table-striped table-hover align-middle table-50-50">
-                                        <tbody>
-                                            <xsl:if test="$catalogueCreationDate != '' or ($catalogueTitle != '' and $dataModelURL != '')">
-                                                <tr>
-                                                    <th scope="row">Date de création</th>
-                                                    <td>
-                                                        <xsl:call-template name="formatDate">
-                                                            <xsl:with-param name="date" select="$catalogueCreationDate"/>
-                                                        </xsl:call-template>
-                                                    </td>
-                                                </tr>
-                                                <tr>
-                                                    <th scope="row">Titre</th>
-                                                    <td>
-                                                        <xsl:if test="$catalogueTitle != '' and $dataModelURL != ''">
-                                                            <a href="{$dataModelURL}" target="_blank">
+                                <xsl:if test="$catalogueCreationDate or ($catalogueTitle and $dataModelURL)">
+                                    <h3 class="mt-4">Catalogue d'objets et modèle</h3>
+                                    <div class="table-responsive">
+                                        <table class="table table-bordered table-sm table-striped table-hover align-middle table-50-50">
+                                            <tbody>
+                                                    <tr>
+                                                        <th scope="row">Date de création</th>
+                                                        <td>
+                                                            <xsl:call-template name="formatDate">
+                                                                <xsl:with-param name="date" select="$catalogueCreationDate"/>
+                                                            </xsl:call-template>
+                                                        </td>
+                                                    </tr>
+                                                    <tr>
+                                                        <th scope="row">Titre</th>
+                                                        <td>
+                                                            <xsl:if test="$catalogueTitle and $dataModelURL">
+                                                                <a href="{$dataModelURL}" target="_blank">
+                                                                    <xsl:value-of select="$catalogueTitle"/>
+                                                                </a>
+                                                            </xsl:if>
+                                                            <xsl:if test="$catalogueTitle and $dataModelURL = ''">
                                                                 <xsl:value-of select="$catalogueTitle"/>
+                                                            </xsl:if>
+                                                        </td>
+                                                    </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </xsl:if>
+                                <xsl:if test="$portrayalDate or ($portrayalTitle and $portrayalURL)">
+                                    <h3 class="mt-4">Informations sur la représentation</h3>
+                                    <div class="table-responsive">
+                                        <table class="table table-bordered table-sm table-striped table-hover align-middle table-50-50">
+                                            <tbody>
+                                                    <tr>
+                                                        <th scope="row">Date de création</th>
+                                                        <td>
+                                                            <xsl:call-template name="formatDate">
+                                                                <xsl:with-param name="date" select="$portrayalDate"/>
+                                                            </xsl:call-template>
+                                                        </td>
+                                                    </tr>
+                                                    <tr>
+                                                        <th scope="row">Lien</th>
+                                                        <td>
+                                                            <a href="{$portrayalURL}" target="_blank">
+                                                                <xsl:value-of select="$portrayalTitle"/>
                                                             </a>
-                                                        </xsl:if>
-                                                        <xsl:if test="$catalogueTitle != '' and $dataModelURL = ''">
-                                                            <xsl:value-of select="$catalogueTitle"/>
-                                                        </xsl:if>
-                                                    </td>
-                                                </tr>
-                                            </xsl:if>
-                                        </tbody>
-                                    </table>
-                                </div>
-                                <h3 class="mt-4">Informations sur la représentation</h3>
-                                <div class="table-responsive">
-                                    <table class="table table-bordered table-sm table-striped table-hover align-middle table-50-50">
-                                        <tbody>
-                                            <xsl:if test="$portrayalDate != '' or ($portrayalTitle != '' and $portrayalURL != '')">
-                                                <tr>
-                                                    <th scope="row">Date de création</th>
-                                                    <td>
-                                                        <xsl:call-template name="formatDate">
-                                                            <xsl:with-param name="date" select="$portrayalDate"/>
-                                                        </xsl:call-template>
-                                                    </td>
-                                                </tr>
-                                                <tr>
-                                                    <th scope="row">Lien</th>
-                                                    <td>
-                                                        <a href="{$portrayalURL}" target="_blank">
-                                                            <xsl:value-of select="$portrayalTitle"/>
-                                                        </a>
-                                                    </td>
-                                                </tr>
-                                            </xsl:if>
-                                        </tbody>
-                                    </table>
-                                </div>
+                                                        </td>
+                                                    </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </xsl:if>
                                 <h3 class="mt-4">Informations sur la distribution</h3>
                                     <div class="table-responsive">
                                         <table class="table table-bordered table-sm table-striped table-hover align-middle table-50-50">
@@ -679,15 +643,11 @@
                                                         (gmd:CI_OnlineResource/gmd:protocol/gco:CharacterString = 'CHTOPO:specialised-geoportal') * -1
                                                     " data-type="number"/>
                                                     <xsl:sort select="gmd:CI_OnlineResource/gmd:name/gmd:PT_FreeText/gmd:textGroup/gmd:LocalisedCharacterString[@locale='#FR']"/>
-                                                    
-                                                    <!-- Variables (contexte local) -->
                                                     <xsl:variable name="resourceName" select="gmd:CI_OnlineResource/gmd:name/gmd:PT_FreeText/gmd:textGroup/gmd:LocalisedCharacterString[@locale='#FR']"/>
                                                     <xsl:variable name="resourceDescription" select="gmd:CI_OnlineResource/gmd:description/gmd:PT_FreeText/gmd:textGroup/gmd:LocalisedCharacterString[@locale='#FR']"/>
                                                     <xsl:variable name="resourceURL" select="gmd:CI_OnlineResource/gmd:linkage/che:PT_FreeURL/che:URLGroup/che:LocalisedURL[@locale='#FR']"/>
-                                                    <xsl:variable name="resourceProtocol" select="gmd:CI_OnlineResource/gmd:protocol/gco:CharacterString"/>
-                                                    
+                                                    <xsl:variable name="resourceProtocol" select="gmd:CI_OnlineResource/gmd:protocol/gco:CharacterString"/>                                                    
                                                     <xsl:choose>
-
                                                         <!-- ESRI:REST -->
                                                         <xsl:when test="$resourceProtocol = 'ESRI:REST'">
                                                             <tr>
@@ -695,10 +655,10 @@
                                                                 <td>
                                                                     <a href="{$resourceURL}" target="_blank">
                                                                         <xsl:choose>
-                                                                            <xsl:when test="$resourceDescription != ''">
+                                                                            <xsl:when test="$resourceDescription">
                                                                                 <xsl:value-of select="$resourceDescription"/>
                                                                             </xsl:when>
-                                                                            <xsl:when test="$resourceName != ''">
+                                                                            <xsl:when test="$resourceName">
                                                                                 <xsl:value-of select="$resourceName"/>
                                                                             </xsl:when>
                                                                             <xsl:otherwise>
@@ -709,7 +669,6 @@
                                                                 </td>
                                                             </tr>
                                                         </xsl:when>
-
                                                         <!-- OGC:WFS -->
                                                         <xsl:when test="$resourceProtocol = 'OGC:WFS'">
                                                             <xsl:if test="not(preceding-sibling::gmd:onLine[gmd:CI_OnlineResource/gmd:protocol/gco:CharacterString = 'OGC:WFS' and gmd:CI_OnlineResource/gmd:linkage/che:PT_FreeURL/che:URLGroup/che:LocalisedURL[@locale='#FR'] = $resourceURL])">
@@ -721,7 +680,7 @@
                                                                             <xsl:if test="position() > 1"><br/></xsl:if>
                                                                             <a href="{$resourceURL}" target="_blank">
                                                                                 <xsl:choose>
-                                                                                    <xsl:when test="$layerDescription != ''">
+                                                                                    <xsl:when test="$layerDescription">
                                                                                         <xsl:value-of select="$layerDescription"/>
                                                                                     </xsl:when>
                                                                                     <xsl:otherwise>Couche <xsl:value-of select="position()"/></xsl:otherwise>
@@ -732,7 +691,6 @@
                                                                 </tr>
                                                             </xsl:if>
                                                         </xsl:when>
-
                                                         <!-- OGC:WMS -->
                                                         <xsl:when test="$resourceProtocol = 'OGC:WMS'">
                                                             <xsl:if test="not(preceding-sibling::gmd:onLine[gmd:CI_OnlineResource/gmd:protocol/gco:CharacterString = 'OGC:WMS' and gmd:CI_OnlineResource/gmd:linkage/che:PT_FreeURL/che:URLGroup/che:LocalisedURL[@locale='#FR'] = $resourceURL])">
@@ -744,7 +702,7 @@
                                                                             <xsl:if test="position() > 1"><br/></xsl:if>
                                                                             <a href="{$resourceURL}" target="_blank">
                                                                                 <xsl:choose>
-                                                                                    <xsl:when test="$layerDescription != ''">
+                                                                                    <xsl:when test="$layerDescription">
                                                                                         <xsl:value-of select="$layerDescription"/>
                                                                                     </xsl:when>
                                                                                     <xsl:otherwise>Couche <xsl:value-of select="position()"/></xsl:otherwise>
@@ -755,7 +713,6 @@
                                                                 </tr>
                                                             </xsl:if>
                                                         </xsl:when>
-
                                                         <!-- Open Data Valais -->
                                                         <xsl:when test="$resourceProtocol = 'WWW:DOWNLOAD-APP' and $resourceName = 'OpenData Valais'">
                                                             <tr>
@@ -765,7 +722,6 @@
                                                                 </td>
                                                             </tr>
                                                         </xsl:when>
-
                                                         <!-- geodienste.ch -->
                                                        <xsl:when test="contains($resourceName,'geodienste.ch')">
                                                             <tr>
@@ -773,10 +729,10 @@
                                                                 <td>
                                                                     <a href="{$resourceURL}" target="_blank">
                                                                         <xsl:choose>
-                                                                            <xsl:when test="$resourceDescription != ''">
+                                                                            <xsl:when test="$resourceDescription">
                                                                                 <xsl:value-of select="$resourceDescription"/>
                                                                             </xsl:when>
-                                                                            <xsl:when test="$resourceName != ''">
+                                                                            <xsl:when test="$resourceName">
                                                                                 <xsl:value-of select="$resourceName"/>
                                                                             </xsl:when>
                                                                             <xsl:otherwise>
@@ -787,7 +743,6 @@
                                                                 </td>
                                                             </tr>
                                                         </xsl:when>
-
                                                         <!-- Géoportail du Canton du Valais -->
                                                         <xsl:when test="$resourceProtocol = 'CHTOPO:specialised-geoportal'">
                                                             <tr>
@@ -801,14 +756,14 @@
                                                     </xsl:choose>
                                                 </xsl:for-each>
                                                 <!-- Ressource interne -->
-                                                <xsl:if test="$internalResource != ''">
+                                                <xsl:if test="$internalResource">
                                                     <tr>
                                                         <th scope="row">Ressource interne</th>
                                                         <td><xsl:value-of select="$internalResource"/></td>
                                                     </tr>
                                                 </xsl:if>
                                                 <!-- Identifiant interne -->
-                                                <xsl:if test="$internalResourceID != ''">
+                                                <xsl:if test="$internalResourceID">
                                                     <tr>
                                                         <th scope="row">Identifiant interne</th>
                                                         <td><xsl:value-of select="$internalResourceID"/></td>
@@ -817,7 +772,7 @@
                                                 <tr>
                                                     <th scope="row">Distributeur</th>
                                                     <td>
-                                                        <xsl:if test="$distributorOrgName != ''">
+                                                        <xsl:if test="$distributorOrgName">
                                                             <xsl:for-each select="tokenize($distributorOrgName, ' - ')">
                                                                 <xsl:value-of select="."/><br/>
                                                             </xsl:for-each>
@@ -835,9 +790,9 @@
                                                             <xsl:for-each select="$resourceFormats">
                                                                 <xsl:variable name="formatName" select="gmd:name/gco:CharacterString"/>
                                                                 <xsl:variable name="formatVersion" select="gmd:version/gco:CharacterString"/>
-                                                                <xsl:if test="$formatName != ''">
+                                                                <xsl:if test="$formatName">
                                                                     <xsl:value-of select="$formatName"/>
-                                                                    <xsl:if test="$formatVersion != ''">
+                                                                    <xsl:if test="$formatVersion">
                                                                         <xsl:text> (version </xsl:text><xsl:value-of select="$formatVersion"/><xsl:text>)</xsl:text>
                                                                     </xsl:if>
                                                                     <xsl:if test="position() != last()"><br/></xsl:if>
@@ -853,13 +808,13 @@
                                     <div class="table-responsive">
                                         <table class="table table-bordered table-sm table-striped table-hover align-middle table-50-50">
                                             <tbody>
-                                                <xsl:if test="$identifier != ''">
+                                                <xsl:if test="$identifier">
                                                     <tr>
                                                         <th scope="row">Identifiant de la fiche</th>
                                                         <td><xsl:value-of select="$identifier"/></td>
                                                     </tr>
                                                 </xsl:if>
-                                                <xsl:if test="$dateStamp != ''">
+                                                <xsl:if test="$dateStamp">
                                                     <tr>
                                                         <th class="label">Date de mise à jour</th>
                                                         <td>

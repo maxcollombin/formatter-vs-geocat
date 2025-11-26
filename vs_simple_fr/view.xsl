@@ -4,38 +4,32 @@
     xmlns:che="http://www.geocat.ch/2008/che"
     xmlns:gmd="http://www.isotc211.org/2005/gmd"
     xmlns:gco="http://www.isotc211.org/2005/gco">
-
     <xsl:output method="html" indent="yes" encoding="UTF-8"/>
-
     <!-- Chargement des codelists -->
     <xsl:variable name="value" select="/root/schemas/iso19139/codelists"/>
-
+    <xsl:variable name="value.che" select="/root/schemas/iso19139.che/codelists"/>
     <!-- Point d’entrée -->
     <xsl:template match="/">
         <xsl:apply-templates select="//che:CHE_MD_Metadata"/>
     </xsl:template>
-
-    <!-- Formatage des dates JJ.MM.AAAA -->
+    <!-- Formatage des dates -->
     <xsl:template name="formatDate">
         <xsl:param name="date"/>
         <xsl:if test="string-length($date)=10">
             <xsl:value-of select="concat(substring($date,9,2),'.',substring($date,6,2),'.',substring($date,1,4))"/>
         </xsl:if>
     </xsl:template>
-
-    <!-- Recherche label dans codelist -->
+    <!-- Template codelist -->
     <xsl:template name="codelist">
         <xsl:param name="code"/>
         <xsl:param name="path"/>
-        <xsl:value-of select="$value/codelist[@name=$path]/entry[code=$code]/label"/>
+        <xsl:value-of select="string($value/codelist[@name= $path]/entry[code = $code]/label)"/>
     </xsl:template>
-
-    <!-- Formatage complet d’un contact -->
+    <!-- Template pour les contacts -->
     <xsl:template name="formatContact">
         <xsl:param name="contact"/>
         <xsl:variable name="ci" select="$contact/gmd:contactInfo/gmd:CI_Contact"/>
         <xsl:variable name="address" select="$ci/gmd:address/che:CHE_CI_Address"/>
-
         <xsl:variable name="streetName" select="$address/che:streetName/gco:CharacterString"/>
         <xsl:variable name="streetNumber" select="$address/che:streetNumber/gco:CharacterString"/>
         <xsl:variable name="postalCode" select="$address/gmd:postalCode/gco:CharacterString"/>
@@ -43,24 +37,23 @@
         <xsl:variable name="phone" select="$ci/gmd:phone/che:CHE_CI_Telephone/gmd:voice/gco:CharacterString"/>
         <xsl:variable name="email" select="$address/gmd:electronicMailAddress/gco:CharacterString"/>
         <xsl:variable name="website" select="$ci/gmd:onlineResource/gmd:CI_OnlineResource/gmd:linkage/che:PT_FreeURL/che:URLGroup/che:LocalisedURL[@locale='#FR']"/>
-
+        <!-- Rue et numéro -->
         <xsl:if test="$streetName or $streetNumber">
             <div><xsl:value-of select="$streetName"/>
                 <xsl:if test="$streetNumber"><xsl:text> </xsl:text><xsl:value-of select="$streetNumber"/></xsl:if>
             </div>
         </xsl:if>
-
+        <!-- Code postal et ville -->
         <xsl:if test="$postalCode or $city">
             <div><xsl:value-of select="$postalCode"/>
                 <xsl:if test="$city"><xsl:text> </xsl:text><xsl:value-of select="$city"/></xsl:if>
             </div>
         </xsl:if>
-
+        <!-- Téléphone, mail, site web -->
         <xsl:if test="$phone"><div>Tél: <a href="tel:{$phone}"><xsl:value-of select="$phone"/></a></div></xsl:if>
         <xsl:if test="$email"><div>Email: <a href="mailto:{$email}"><xsl:value-of select="$email"/></a></div></xsl:if>
         <xsl:if test="$website"><div>Site web: <a href="{$website}" target="_blank"><xsl:value-of select="$website"/></a></div></xsl:if>
     </xsl:template>
-
     <!-- Template principal -->
     <xsl:template match="che:CHE_MD_Metadata">
         <!-- Variables principales -->
@@ -75,51 +68,64 @@
         <xsl:variable name="contact" select=".//che:CHE_MD_DataIdentification/gmd:pointOfContact/che:CHE_CI_ResponsibleParty"/>
         <xsl:variable name="orgName" select="substring-before(.//gmd:citedResponsibleParty/che:CHE_CI_ResponsibleParty/gmd:organisationName/gmd:PT_FreeText/gmd:textGroup/gmd:LocalisedCharacterString[@locale='#FR'], ' - ')"/>
         <xsl:variable name="orgAcronym" select=".//gmd:citedResponsibleParty/che:CHE_CI_ResponsibleParty/che:organisationAcronym/gmd:PT_FreeText/gmd:textGroup/gmd:LocalisedCharacterString[@locale='#FR']"/>
-
+        <!-- Contenu HTML -->
         <html lang="fr">
             <head>
                 <meta charset="UTF-8"/>
                 <meta name="viewport" content="width=device-width, initial-scale=1"/>
                 <title>Canton du Valais - Catalogue de métadonnées</title>
                 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet"/>
+                <!-- Style VS -->
                 <style type="text/css">
-                    :root { --bs-primary: #D52826; --vs-font-family: "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; }
+                    /* Variables globales */
+                    :root { --bs-primary: #D52826; --vs-font-family: "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; }                    
+                    /* Ecran */
                     body { font-family: var(--vs-font-family); font-size:1rem; line-height:1.5; margin:0; padding:0; }
-                    h1 { font-size:2.5rem; line-height:1.2; } h2{font-size:1.7rem;} h3{font-size:1.2rem;} p{margin:1rem 0;}
-                    a{color:var(--bs-primary); text-decoration:none;} a:hover,a:active{color:#b3180d;text-decoration:underline;}
-                    .table-50-50{table-layout:fixed;} .table-50-50 th, .table-50-50 td{width:50%;}
-
+                    h1 { font-size:2.5rem; line-height:1.2; } 
+                    h2 { font-size:1.7rem; } 
+                    h3 { font-size:1.2rem; } 
+                    p { margin:1rem 0; }
+                    a { color:var(--bs-primary); text-decoration:none; } 
+                    a:hover, a:active { color:#b3180d; text-decoration:underline; }
+                    .table-50-50 { table-layout:fixed; } 
+                    .table-50-50 th, .table-50-50 td { width:50%; }
+                    /* Vignettes */
+                    .thumbnail-wrapper { text-align: center; margin-bottom: 1rem; }
+                    .thumbnail-wrapper img { max-width: 100%; height: auto; border: 1px solid #ddd; border-radius: 4px; }
                     /* Impression */
-                    @media print{
-                        *{-webkit-print-color-adjust:exact!important;color-adjust:exact!important;}
-                        body,h1,h3,p,table,th,td,img{color:#000!important;background:#fff!important;}
-                        a,a:visited{color:#D52826!important;text-decoration:underline!important;}
-                        .d-print-none,.btn{display:none!important;}
-                        body{font-size:11pt;line-height:1.4;}
-                        h3{font-size:12pt;font-weight:bold;margin-top:16pt;margin-bottom:8pt;page-break-after:avoid;}
-                        header h2{background:#D52826;color:#fff;border:none;padding:12pt 8pt;text-align:center;margin-bottom:24pt;font-size:18pt;font-weight:bold;border-radius:4pt;page-break-after:avoid;}
-                        .container{max-width:100%!important;margin:0!important;padding:0!important;}
-                        .card{border:1pt solid #000!important;box-shadow:none!important;margin:16pt 0 12pt 0!important;page-break-inside:avoid;background:#fff!important;}
-                        .card-header{background:#fff;color:#000;border:none;border-bottom:1pt solid #ddd!important;font-weight:600;text-align:center;page-break-after:avoid;padding:12pt 8pt;}
-                        .card-body{padding:16pt 12pt 12pt 12pt!important;background:#fff!important;}
-                        .table-responsive{overflow:visible!important;page-break-inside:avoid;margin-bottom:16pt;background:#fff!important;border:none!important;}
-                        table{border-collapse:collapse!important;width:100%!important;margin-bottom:12pt;page-break-inside:avoid;background:#fff!important;border:1pt solid #ddd!important;}
-                        th{white-space:nowrap;background:#fff!important;color:#000!important;font-weight:600;padding:6pt 8pt!important;vertical-align:top;border-right:1pt solid #ddd!important;}
-                        td{background:#fff!important;color:#000!important;padding:6pt 8pt!important;vertical-align:top;word-wrap:break-word;border:none!important;}
-                        tr:nth-child(odd) th,tr:nth-child(odd) td{background:#f8f9fa!important;}
-                        img{max-width:100%!important;height:auto!important;display:block!important;margin:12pt auto!important;border:1pt solid #ddd;page-break-inside:avoid;}
-                        p,td,th{orphans:3;widows:3;}
-                        .page-break{page-break-before:always;}
-                        [class*="col-"],.row,.container,.card,.card-body,.card-header,.col-12,.col-md-4{border:none!important;box-shadow:none!important;}
+                    @media print {
+                        * { -webkit-print-color-adjust:exact!important; color-adjust:exact!important; }
+                        body, h1, h3, p, table, th, td { color:#000!important; background:#fff!important; }
+                        a, a:visited { color:#D52826!important; text-decoration:underline!important; }
+                        .d-print-none, .btn { display:none!important; }
+                        body { font-size:11pt; line-height:1.4; }
+                        h3 { font-size:12pt; font-weight:bold; margin-top:16pt; margin-bottom:8pt; page-break-after:avoid; }
+                        header h2 { background:#D52826; color:#fff; border:none; padding:12pt 8pt; text-align:center; margin-bottom:24pt; font-size:18pt; font-weight:bold; border-radius:4pt; page-break-after:avoid; }
+                        .container { max-width:100%!important; margin:0!important; padding:0!important; }
+                        .card { border:1pt solid #000!important; box-shadow:none!important; margin:16pt 0 12pt 0!important; page-break-inside:avoid; background:#fff!important; }
+                        .card-header { background:#fff; color:#000; border:none; border-bottom:1pt solid #ddd!important; font-weight:600; text-align:center; page-break-after:avoid; padding:12pt 8pt; }
+                        .card-body { padding:16pt 12pt 12pt 12pt!important; background:#fff!important; }
+                        .table-responsive { overflow:visible!important; page-break-inside:avoid; margin-bottom:16pt; background:#fff!important; border:none!important; }
+                        table { border-collapse:collapse!important; width:100%!important; margin-bottom:12pt; page-break-inside:avoid; background:#fff!important; border:1pt solid #ddd!important; }
+                        th { white-space:nowrap; background:#fff!important; color:#000!important; font-weight:600; padding:6pt 8pt!important; vertical-align:top; border-right:1pt solid #ddd!important; }
+                        td { background:#fff!important; color:#000!important; padding:6pt 8pt!important; vertical-align:top; word-wrap:break-word; border:none!important; }
+                        tr:nth-child(odd) th, tr:nth-child(odd) td { background:#f8f9fa!important; }
+                        .thumbnail-wrapper { text-align: center !important; margin-bottom: 12pt !important; }
+                        .thumbnail-wrapper img { display: inline-block !important; max-width: 95% !important; height: auto !important; border: 1pt solid #ddd !important; page-break-inside: avoid !important; border-radius: 0 !important; }
+                        p, td, th { orphans:3; widows:3; }
+                        .page-break { page-break-before:always; }
+                        [class*="col-"], .row, .container, .card, .card-body, .card-header, .col-12, .col-md-4 { border:none!important; box-shadow:none!important; }
                     }
                 </style>
             </head>
             <body class="bg-white">
+            <!-- Header -->
                 <header class="container py-3">
                     <h2 class="text-center mt-3 mb-0 py-3 rounded" style="background-color:#D52826;color:#fff;font-size:clamp(1.5rem,4vw,2.2rem);">
                         Catalogue métadonnées - Simple
                     </h2>
                 </header>
+                <!-- Navigation -->
                 <nav class="container my-3 d-print-none">
                     <div class="row g-2">
                         <div class="col-12 col-md-4 d-flex justify-content-center justify-content-md-start">
@@ -135,6 +141,7 @@
                         </div>
                     </div>
                 </nav>
+                <!-- Contenu principal -->
                 <main class="container">
                     <article class="card mb-4">
                         <xsl:if test="$citationTitle">
@@ -142,7 +149,9 @@
                         </xsl:if>
                         <div class="card-body">
                             <xsl:if test="$thumbnail">
-                                <img src="{$thumbnail}" alt="Aperçu de {$citationTitle}" class="img-fluid mx-auto d-block mb-3"/>
+                                <div class="thumbnail-wrapper">
+                                    <img src="{$thumbnail}" alt="Aperçu de {$citationTitle}"/>
+                                </div>
                             </xsl:if>
                             <xsl:if test="$abstract">
                                 <h3>Résumé de la ressource</h3>
@@ -161,14 +170,16 @@
                                         <xsl:if test="$revisionDate">
                                             <tr><th scope="row">Date de révision</th><td><xsl:call-template name="formatDate"><xsl:with-param name="date" select="$revisionDate"/></xsl:call-template></td></tr>
                                         </xsl:if>
-                                        <tr>
-                                            <th scope="row">Gestionnaire</th>
-                                            <td>
-                                                <xsl:if test="$orgName"><xsl:value-of select="$orgName"/><br/></xsl:if>
-                                                <xsl:if test="$orgAcronym"><xsl:value-of select="$orgAcronym"/><br/></xsl:if>
-                                                <xsl:call-template name="formatContact"><xsl:with-param name="contact" select="$contact"/></xsl:call-template>
-                                            </td>
-                                        </tr>
+                                        <xsl:if test="$contact">
+                                            <tr>
+                                                <th scope="row">Gestionnaire</th>
+                                                <td>
+                                                    <xsl:if test="$orgName"><xsl:value-of select="$orgName"/><br/></xsl:if>
+                                                    <xsl:if test="$orgAcronym"><xsl:value-of select="$orgAcronym"/><br/></xsl:if>
+                                                    <xsl:call-template name="formatContact"><xsl:with-param name="contact" select="$contact"/></xsl:call-template>
+                                                </td>
+                                            </tr>
+                                        </xsl:if>
                                     </tbody>
                                 </table>
                             </div>
