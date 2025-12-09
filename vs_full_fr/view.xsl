@@ -378,7 +378,7 @@
                                         </xsl:if>
                                         <xsl:if test="$basicGeodataID">
                                             <tr>
-                                                <th scope="row">Géodonnée de base (fédéral)</th>
+                                                <th scope="row">Identifiant géodonnée de base</th>
                                                 <td><xsl:value-of select="$basicGeodataID"/></td>
                                             </tr>
                                         </xsl:if>
@@ -632,11 +632,13 @@
                                         <table class="table table-bordered table-sm table-striped table-hover align-middle table-50-50">
                                             <tbody>
                                                 <xsl:for-each select="$onlineResources">
-
                                                     <!-- Tri personnalisé : priorité par type de service et fournisseur -->
                                                     <xsl:sort select="
-                                                        (gmd:CI_OnlineResource/gmd:protocol/gco:CharacterString = 'ESRI:REST') * -5 +
-                                                        (starts-with(gmd:CI_OnlineResource/gmd:protocol/gco:CharacterString, 'OGC:')) * -4 +
+                                                        (gmd:CI_OnlineResource/gmd:protocol/gco:CharacterString = 'ESRI:REST') * -6 +
+                                                        (starts-with(gmd:CI_OnlineResource/gmd:protocol/gco:CharacterString, 'OGC:')) * -5 +
+                                                        (gmd:CI_OnlineResource/gmd:protocol/gco:CharacterString = 'WWW:DOWNLOAD:ZIP' and 
+                                                          (contains(gmd:CI_OnlineResource/gmd:name/gmd:PT_FreeText/gmd:textGroup/gmd:LocalisedCharacterString[@locale='#FR'], 'GDB') or 
+                                                           contains(gmd:CI_OnlineResource/gmd:name/gmd:PT_FreeText/gmd:textGroup/gmd:LocalisedCharacterString[@locale='#FR'], 'GPKG'))) * -4 +
                                                         (gmd:CI_OnlineResource/gmd:protocol/gco:CharacterString = 'WWW:DOWNLOAD-APP'
                                                           and gmd:CI_OnlineResource/gmd:name/gmd:PT_FreeText/gmd:textGroup/gmd:LocalisedCharacterString[@locale='#FR'] = 'OpenData Valais') * -3 +
                                                         (contains(gmd:CI_OnlineResource/gmd:name/gmd:PT_FreeText/gmd:textGroup/gmd:LocalisedCharacterString[@locale='#FR'], 'geodienste.ch')) * -2 +
@@ -650,24 +652,35 @@
                                                     <xsl:choose>
                                                         <!-- ESRI:REST -->
                                                         <xsl:when test="$resourceProtocol = 'ESRI:REST'">
-                                                            <tr>
-                                                                <th scope="row">ArcGIS REST Services</th>
-                                                                <td>
-                                                                    <a href="{$resourceURL}" target="_blank">
-                                                                        <xsl:choose>
-                                                                            <xsl:when test="$resourceDescription">
-                                                                                <xsl:value-of select="$resourceDescription"/>
-                                                                            </xsl:when>
-                                                                            <xsl:when test="$resourceName">
-                                                                                <xsl:value-of select="$resourceName"/>
-                                                                            </xsl:when>
-                                                                            <xsl:otherwise>
-                                                                                <xsl:value-of select="$resourceURL"/>
-                                                                            </xsl:otherwise>
-                                                                        </xsl:choose>
-                                                                    </a>
-                                                                </td>
-                                                            </tr>
+                                                            <!-- Aggrégation des différents liens -->
+                                                            <xsl:if test="not(preceding-sibling::gmd:onLine[gmd:CI_OnlineResource/gmd:protocol/gco:CharacterString = 'ESRI:REST'])">
+                                                                <xsl:variable name="allRestServices" select="../gmd:onLine[gmd:CI_OnlineResource/gmd:protocol/gco:CharacterString = 'ESRI:REST']"/>
+                                                                <tr>
+                                                                    <th scope="row">ArcGIS REST Services</th>
+                                                                    <td>
+                                                                        <xsl:for-each select="$allRestServices">
+                                                                            <xsl:variable name="serviceURL" select="gmd:CI_OnlineResource/gmd:linkage/che:PT_FreeURL/che:URLGroup/che:LocalisedURL[@locale='#FR']"/>
+                                                                            <xsl:variable name="serviceName" select="gmd:CI_OnlineResource/gmd:name/gmd:PT_FreeText/gmd:textGroup/gmd:LocalisedCharacterString[@locale='#FR']"/>
+                                                                            <xsl:variable name="serviceDescription" select="gmd:CI_OnlineResource/gmd:description/gmd:PT_FreeText/gmd:textGroup/gmd:LocalisedCharacterString[@locale='#FR']"/>
+                                                                            
+                                                                            <a href="{$serviceURL}" target="_blank">
+                                                                                <xsl:choose>
+                                                                                    <xsl:when test="$serviceDescription">
+                                                                                        <xsl:value-of select="$serviceDescription"/>
+                                                                                    </xsl:when>
+                                                                                    <xsl:when test="$serviceName">
+                                                                                        <xsl:value-of select="$serviceName"/>
+                                                                                    </xsl:when>
+                                                                                    <xsl:otherwise>
+                                                                                        <xsl:value-of select="$serviceURL"/>
+                                                                                    </xsl:otherwise>
+                                                                                </xsl:choose>
+                                                                            </a>
+                                                                            <xsl:if test="position() != last()"><br/></xsl:if>
+                                                                        </xsl:for-each>
+                                                                    </td>
+                                                                </tr>
+                                                            </xsl:if>
                                                         </xsl:when>
                                                         <!-- OGC:WFS -->
                                                         <xsl:when test="$resourceProtocol = 'OGC:WFS'">
@@ -713,14 +726,48 @@
                                                                 </tr>
                                                             </xsl:if>
                                                         </xsl:when>
-                                                        <!-- Open Data Valais -->
+                                                        <!-- WWW:DOWNLOAD:ZIP-->
+                                                        <xsl:when test="$resourceProtocol = 'WWW:DOWNLOAD:ZIP' and (contains($resourceName, 'GDB') or contains($resourceName, 'GPKG'))">
+                                                            <!-- Aggrégation des différents liens -->
+                                                            <xsl:if test="not(preceding-sibling::gmd:onLine[gmd:CI_OnlineResource/gmd:protocol/gco:CharacterString = 'WWW:DOWNLOAD:ZIP'][contains(gmd:CI_OnlineResource/gmd:name/gmd:PT_FreeText/gmd:textGroup/gmd:LocalisedCharacterString[@locale='#FR'], 'GDB') or contains(gmd:CI_OnlineResource/gmd:name/gmd:PT_FreeText/gmd:textGroup/gmd:LocalisedCharacterString[@locale='#FR'], 'GPKG')])">
+                                                                <xsl:variable name="allZipResources" select="../gmd:onLine[gmd:CI_OnlineResource/gmd:protocol/gco:CharacterString = 'WWW:DOWNLOAD:ZIP']"/>                                                                
+                                                                <tr>
+                                                                    <th scope="row">Téléchargement des données (ZIP)</th>
+                                                                    <td>
+                                                                        <!-- Liens de téléchargement de la GDB -->
+                                                                        <xsl:for-each select="$allZipResources[contains(gmd:CI_OnlineResource/gmd:name/gmd:PT_FreeText/gmd:textGroup/gmd:LocalisedCharacterString[@locale='#FR'], 'GDB')]">
+                                                                            <xsl:variable name="url" select="gmd:CI_OnlineResource/gmd:linkage/che:PT_FreeURL/che:URLGroup/che:LocalisedURL[@locale='#FR']"/>
+                                                                            <a href="{$url}" target="_blank">ESRI File Geodatabase FileGDB (GDB)</a>
+                                                                            <xsl:if test="position() != last()"><br/></xsl:if>
+                                                                        </xsl:for-each>                                                                        
+                                                                        <!-- Liens de téléchargement du GPKG -->
+                                                                        <xsl:for-each select="$allZipResources[contains(gmd:CI_OnlineResource/gmd:name/gmd:PT_FreeText/gmd:textGroup/gmd:LocalisedCharacterString[@locale='#FR'], 'GPKG')]">
+                                                                            <xsl:variable name="url" select="gmd:CI_OnlineResource/gmd:linkage/che:PT_FreeURL/che:URLGroup/che:LocalisedURL[@locale='#FR']"/>
+                                                                            <xsl:if test="position() = 1 and $allZipResources[contains(gmd:CI_OnlineResource/gmd:name/gmd:PT_FreeText/gmd:textGroup/gmd:LocalisedCharacterString[@locale='#FR'], 'GDB')]"><br/></xsl:if>
+                                                                            <a href="{$url}" target="_blank">OGC Geopackage (GPKG)</a>
+                                                                            <xsl:if test="position() != last()"><br/></xsl:if>
+                                                                        </xsl:for-each>
+                                                                    </td>
+                                                                </tr>
+                                                            </xsl:if>
+                                                        </xsl:when>
+                                                        <!-- OpenData Valais -->
                                                         <xsl:when test="$resourceProtocol = 'WWW:DOWNLOAD-APP' and $resourceName = 'OpenData Valais'">
-                                                            <tr>
-                                                                <th scope="row">Service de téléchargement OpenData Valais</th>
-                                                                <td>
-                                                                    <a href="{$resourceURL}" target="_blank">Lien</a>
-                                                                </td>
-                                                            </tr>
+                                                            <!-- Aggrégation des différents liens -->
+                                                            <xsl:if test="not(preceding-sibling::gmd:onLine[gmd:CI_OnlineResource/gmd:protocol/gco:CharacterString = 'WWW:DOWNLOAD-APP' and gmd:CI_OnlineResource/gmd:name/gmd:PT_FreeText/gmd:textGroup/gmd:LocalisedCharacterString[@locale='#FR'] = 'OpenData Valais'])">
+                                                                <xsl:variable name="allOpenDataServices" select="../gmd:onLine[gmd:CI_OnlineResource/gmd:protocol/gco:CharacterString = 'WWW:DOWNLOAD-APP' and gmd:CI_OnlineResource/gmd:name/gmd:PT_FreeText/gmd:textGroup/gmd:LocalisedCharacterString[@locale='#FR'] = 'OpenData Valais']"/>
+                                                                <tr>
+                                                                    <th scope="row">Service<xsl:if test="count($allOpenDataServices) > 1">s</xsl:if> de téléchargement OpenData Valais</th>
+                                                                    <td>
+                                                                        <xsl:for-each select="$allOpenDataServices">
+                                                                            <xsl:variable name="serviceURL" select="gmd:CI_OnlineResource/gmd:linkage/che:PT_FreeURL/che:URLGroup/che:LocalisedURL[@locale='#FR']"/>
+                                                                            <xsl:variable name="serviceDescription" select="gmd:CI_OnlineResource/gmd:description/gmd:PT_FreeText/gmd:textGroup/gmd:LocalisedCharacterString[@locale='#FR']"/>
+                                                                            <a href="{$serviceURL}" target="_blank">Lien</a>
+                                                                            <xsl:if test="position() != last()"><br/></xsl:if>
+                                                                        </xsl:for-each>
+                                                                    </td>
+                                                                </tr>
+                                                            </xsl:if>
                                                         </xsl:when>
                                                         <!-- geodienste.ch -->
                                                        <xsl:when test="contains($resourceName,'geodienste.ch')">
