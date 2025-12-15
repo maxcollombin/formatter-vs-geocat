@@ -210,7 +210,7 @@
     <xsl:template match="che:CHE_MD_Metadata">
         <!-- Variables -->
         <xsl:variable name="identifier" select="gmd:fileIdentifier/gco:CharacterString"/>
-        <xsl:variable name="urlBase" select="'https://geocat-int.dev.bgdi.ch/geonetwork/srv/api/records/'"/>
+        <xsl:variable name="urlBase" select="'https://geocat.ch/geonetwork/srv/api/records/'"/>
         <xsl:variable name="citationTitle" select=".//gmd:citation/gmd:CI_Citation/gmd:title/gmd:PT_FreeText/gmd:textGroup/gmd:LocalisedCharacterString[@locale='#FR']"/>
         <xsl:variable name="abstract" select=".//gmd:abstract/gmd:PT_FreeText/gmd:textGroup/gmd:LocalisedCharacterString[@locale='#FR']"/>
         <xsl:variable name="purpose" select=".//gmd:purpose/gmd:PT_FreeText/gmd:textGroup/gmd:LocalisedCharacterString[@locale='#FR']"/>
