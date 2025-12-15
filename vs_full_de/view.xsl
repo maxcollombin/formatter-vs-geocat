@@ -582,7 +582,7 @@
                                         </tbody>
                                     </table>
                                 </div>
-                                <xsl:if test="$catalogueCreationDate or ($catalogueTitle and $dataModelURL)">
+                                <xsl:if test="$catalogueCreationDate and $catalogueTitle and $dataModelURL">
                                     <h3 class="mt-4">Objektkatalog und Datenmodell</h3>
                                     <div class="table-responsive">
                                         <table class="table table-bordered table-sm table-striped table-hover align-middle table-50-50">
@@ -598,21 +598,16 @@
                                                 <tr>
                                                     <th scope="row">Titel</th>
                                                     <td>
-                                                        <xsl:if test="$catalogueTitle and $dataModelURL">
-                                                            <a href="{$dataModelURL}" target="_blank">
-                                                                <xsl:value-of select="$catalogueTitle"/>
-                                                            </a>
-                                                        </xsl:if>
-                                                        <xsl:if test="$catalogueTitle and $dataModelURL = ''">
+                                                        <a href="{$dataModelURL}" target="_blank">
                                                             <xsl:value-of select="$catalogueTitle"/>
-                                                        </xsl:if>
+                                                        </a>
                                                     </td>
                                                 </tr>
                                             </tbody>
                                         </table>
                                     </div>
                                 </xsl:if>
-                                <xsl:if test="$portrayalDate or ($portrayalTitle and $portrayalURL)">
+                                <xsl:if test="$portrayalDate and $portrayalTitle and $portrayalURL">
                                     <h3 class="mt-4">Darstellungskatalog</h3>
                                     <div class="table-responsive">
                                         <table class="table table-bordered table-sm table-striped table-hover align-middle table-50-50">

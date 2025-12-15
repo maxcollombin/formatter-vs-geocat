@@ -572,57 +572,52 @@
                                         </tbody>
                                     </table>
                                 </div>
-                                <xsl:if test="$catalogueCreationDate or ($catalogueTitle and $dataModelURL)">
+                                <xsl:if test="$catalogueCreationDate and $catalogueTitle and $dataModelURL">
                                     <h3 class="mt-4">Catalogue d'objets et modèle</h3>
                                     <div class="table-responsive">
                                         <table class="table table-bordered table-sm table-striped table-hover align-middle table-50-50">
                                             <tbody>
-                                                    <tr>
-                                                        <th scope="row">Date de création</th>
-                                                        <td>
-                                                            <xsl:call-template name="formatDate">
-                                                                <xsl:with-param name="date" select="$catalogueCreationDate"/>
-                                                            </xsl:call-template>
-                                                        </td>
-                                                    </tr>
-                                                    <tr>
-                                                        <th scope="row">Titre</th>
-                                                        <td>
-                                                            <xsl:if test="$catalogueTitle and $dataModelURL">
-                                                                <a href="{$dataModelURL}" target="_blank">
-                                                                    <xsl:value-of select="$catalogueTitle"/>
-                                                                </a>
-                                                            </xsl:if>
-                                                            <xsl:if test="$catalogueTitle and $dataModelURL = ''">
-                                                                <xsl:value-of select="$catalogueTitle"/>
-                                                            </xsl:if>
-                                                        </td>
-                                                    </tr>
+                                                <tr>
+                                                    <th scope="row">Date de création</th>
+                                                    <td>
+                                                        <xsl:call-template name="formatDate">
+                                                            <xsl:with-param name="date" select="$catalogueCreationDate"/>
+                                                        </xsl:call-template>
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <th scope="row">Titre</th>
+                                                    <td>
+                                                        <a href="{$dataModelURL}" target="_blank">
+                                                            <xsl:value-of select="$catalogueTitle"/>
+                                                        </a>
+                                                    </td>
+                                                </tr>
                                             </tbody>
                                         </table>
                                     </div>
                                 </xsl:if>
-                                <xsl:if test="$portrayalDate or ($portrayalTitle and $portrayalURL)">
+                                <xsl:if test="$portrayalDate and $portrayalTitle and $portrayalURL">
                                     <h3 class="mt-4">Informations sur la représentation</h3>
                                     <div class="table-responsive">
                                         <table class="table table-bordered table-sm table-striped table-hover align-middle table-50-50">
                                             <tbody>
-                                                    <tr>
-                                                        <th scope="row">Date de création</th>
-                                                        <td>
-                                                            <xsl:call-template name="formatDate">
-                                                                <xsl:with-param name="date" select="$portrayalDate"/>
-                                                            </xsl:call-template>
-                                                        </td>
-                                                    </tr>
-                                                    <tr>
-                                                        <th scope="row">Lien</th>
-                                                        <td>
-                                                            <a href="{$portrayalURL}" target="_blank">
-                                                                <xsl:value-of select="$portrayalTitle"/>
-                                                            </a>
-                                                        </td>
-                                                    </tr>
+                                                <tr>
+                                                    <th scope="row">Date de création</th>
+                                                    <td>
+                                                        <xsl:call-template name="formatDate">
+                                                            <xsl:with-param name="date" select="$portrayalDate"/>
+                                                        </xsl:call-template>
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <th scope="row">Lien</th>
+                                                    <td>
+                                                        <a href="{$portrayalURL}" target="_blank">
+                                                            <xsl:value-of select="$portrayalTitle"/>
+                                                        </a>
+                                                    </td>
+                                                </tr>
                                             </tbody>
                                         </table>
                                     </div>
